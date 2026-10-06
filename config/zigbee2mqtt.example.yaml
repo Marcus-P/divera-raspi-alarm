@@ -1,0 +1,19 @@
+version: 5
+mqtt:
+  base_topic: zigbee2mqtt
+  server: mqtt://127.0.0.1:1883
+serial:
+  # Installer replaces this after automatic ZBDongle-P discovery.
+  port: /dev/serial/by-id/REPLACED_AUTOMATICALLY
+  adapter: zstack
+frontend:
+  enabled: true
+  port: 8080
+homeassistant:
+  enabled: false
+advanced:
+  log_output:
+    - console
+availability:
+  enabled: true
+permit_join: false
