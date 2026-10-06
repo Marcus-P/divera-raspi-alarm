@@ -1,0 +1,7 @@
+[Unit]
+Description=Watch for Zigbee serial adapters
+[Path]
+PathChanged=/dev/serial/by-id
+Unit=divera-zigbee-detect.service
+[Install]
+WantedBy=multi-user.target
