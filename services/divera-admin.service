@@ -1,0 +1,23 @@
+[Unit]
+Description=DIVERA Raspberry Alarm administration service
+After=network.target
+[Service]
+Type=simple
+User=divera-alarm
+Group=divera-alarm
+Environment=DRA_CONFIG=/etc/divera-raspi-alarm/config.toml
+Environment=DRA_SECRETS=/etc/divera-raspi-alarm/secrets.env
+WorkingDirectory=/opt/divera-raspi-alarm/app
+ExecStart=/opt/divera-raspi-alarm/venv/bin/uvicorn divera_alarm.main:app --host 127.0.0.1 --port 8765
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/divera-raspi-alarm
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+[Install]
+WantedBy=multi-user.target
