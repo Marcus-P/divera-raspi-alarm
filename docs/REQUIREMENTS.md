@@ -1,49 +1,104 @@
 # Requirements
 
 ## Operator experience
-
-The target operator is a non-IT firefighter. Initial and ongoing configuration must be graphical and clear. Console work is limited to installation/recovery, with the long-term goal of a single bootstrap action.
-
-## Required behavior
-
-- Raspberry Pi boots unattended after power restoration.
-- DIVERA web interface is the first operational screen, fullscreen/borderless.
-- Browser and critical services recover automatically.
-- Zigbee devices can be paired and named from the local web UI.
-- Smoke events are forwarded to DIVERA with device/room identity and deduplication.
-- Test events cannot be mistaken for real fire events.
-- Battery-low and detector fault conditions create technical notifications, not fire alarms.
-- Detector availability/last-seen is monitored.
-- Weekly synthetic end-to-end test defaults to Sunday 12:00 and uses configurable test recipients.
-- Health monitoring distinguishes process health from functional health.
-- Repeated failed local recovery escalates to a controlled Pi reboot.
-- Hardware watchdog provides a final recovery layer.
-- Logs and other writes are strictly bounded for long-term SD-card operation.
-- Secrets are never committed to the repository.
+The target operator is a non-IT firefighter. Initial and ongoing configuration must be graphical and clear. Routine operation must not require shell access, YAML editing, MQTT topic editing, Python changes or systemd editing. Console access is reserved for installation/recovery, with the target of a single bootstrap action.
 
 ## Hardware baseline
-
 - Raspberry Pi 4 Model B Rev 1.5, approximately 4 GB RAM
-- 128 GB SanDisk High Endurance microSDXC
-- SONOFF ZBDongle-P (CC2652P / zstack)
-- frient/Develco Zigbee smoke detector from the selected SMSZB-120 family; exact identifiers and MQTT payload semantics will be verified on the purchased unit during commissioning
-- motion sensor interface to be confirmed before implementation
-- Internet: built-in Ethernet connected by LAN cable to an external router; DHCP expected; no SIM/modem configuration on the Pi
-- motion sensor GPIO/interface: to be fixed from the actual wiring/photo before implementation
+- 128 GB SanDisk High Endurance microSDXC, intended for years of 24/7 operation
+- built-in Ethernet to an external router, DHCP by default; no SIM/LTE configuration
+- SONOFF ZBDongle-P, CC2652P / zstack
+- purchased frient/Develco smoke detector from the selected SMSZB-120 family; real identifiers/payloads verified during commissioning
+- existing PIR: grey physical pin 2/+5 V, black pin 6/GND, white pin 16/BCM GPIO23
 
+## Boot, kiosk and display
+- unattended boot after power restoration
+- supported Raspberry Pi OS 64-bit
+- graphical session and Chromium start automatically
+- DIVERA is always the first visible operational page in borderless fullscreen kiosk mode
+- Chromium opens two kiosk tabs: first DIVERA, second the local administration UI
+- the hidden tab strip is not required; an attached keyboard can switch tabs with Ctrl+Tab
+- after browser restart/reboot DIVERA is again the first visible tab
+- browser crash is recovered automatically
+- Pi remains powered continuously
+- display blanks after configurable inactivity and wakes immediately on PIR activity
+- PIR/display failure is isolated from alarm forwarding
 
-## Mandatory commissioning / test mode
+## Graphical administration
+The local browser UI must provide:
+- DIVERA access-key/settings entry without exposing stored secrets
+- explicit persistent commissioning Test mode
+- DIVERA personnel refresh/list and test-recipient selection by human-readable name
+- later production readiness/status-routing configuration
+- Zigbee pairing without console use
+- detector/room naming
+- detector battery, battery-low, fault, availability and last-seen
+- system/service/network health
+- manual tests and weekly test configuration/recipients
+- kiosk URL, display/PIR settings and diagnostics
 
-The appliance has an explicit, persistent **Test mode** switch in the graphical UI.
+## Alarm behavior
+- local detector siren remains autonomous; Raspberry Pi reporting is supplemental
+- real smoke events are forwarded with device/room identity
+- deduplication/cooldown prevents repeated alarm creation
+- detector test events must never accidentally become real fire events
+- battery-low, fault and offline conditions are technical notifications, never fire alarms
+- technical notifications are deduplicated/rate-limited
+- actual MQTT semantics for smoke/test are verified on the purchased detector before live production forwarding
 
-When Test mode is enabled:
-- every alarm event, including a real smoke event received from a detector, is routed only to the explicitly selected DIVERA test recipient(s)
-- production recipient/status logic is not allowed to run
-- the UI must show an unmistakable persistent TEST MODE warning
-- the selected recipients are chosen by human-readable names loaded from DIVERA, while stable DIVERA relation IDs/foreign IDs are stored internally
-- disabling Test mode requires an explicit confirmation; production routing is never enabled merely by rebooting or updating
-- if the recipient list cannot be refreshed/resolved, fail safe: do not fall back to "all users"
+## Commissioning Test mode
+Test mode is a hard routing guard and defaults ON.
+- every alarm event, including a real smoke event, is restricted to explicitly selected DIVERA test recipient(s)
+- personnel are loaded from DIVERA and displayed by name; stable DIVERA IDs are stored internally
+- production recipient/status logic is bypassed
+- TEST MODE is unmistakably visible in the UI
+- state and selected recipients survive reboot/update
+- disabling Test mode requires explicit confirmation
+- unresolved/unavailable recipient data fails closed; never fall back to all users
+- no code path may omit recipient restriction while Test mode is active
 
-Commissioning default: Test mode ON.
+## Production routing
+After deliberate Test-mode exit, production routing can address personnel according to current DIVERA readiness/status. Exact status mapping is configurable and validated against the unit's real DIVERA setup; stale/unavailable status data gets explicit fail-safe behavior rather than guessed routing.
 
-The later production mode will support status-dependent routing to personnel who are currently marked appropriately/einsatzbereit in DIVERA. Exact status mapping remains configurable and must be validated against the unit's DIVERA configuration.
+## Weekly end-to-end test
+- default Sunday 12:00 local time, configurable
+- synthetic per-configured-detector events exercise MQTT/alarm processing/Internet/DIVERA as far as practical
+- unmistakable label: SYSTEMTEST - KEIN EINSATZ
+- separate configurable test recipients
+- records compact success/failure; failure becomes a technical fault where possible
+- does not claim to test smoke chamber, siren or physical Zigbee RF path
+
+## Zigbee
+- Zigbee2MQTT plus Mosquitto, auto-starting
+- ZBDongle-P uses zstack
+- stable /dev/serial/by-id coordinator path discovered on real hardware
+- permit_join false except for bounded pairing windows from the UI
+- meaningful room/device names
+- short USB extension recommended to reduce USB 3 interference
+
+## Self-healing and monitoring
+Critical components include alarm service, admin UI, Mosquitto, Zigbee2MQTT, coordinator, kiosk/Chromium and relevant network functions.
+1. systemd restart/backoff
+2. functional checks, not PID-only checks
+3. targeted component/dependency restart
+4. bounded retry/escalation
+5. controlled Pi reboot after repeated recovery failure
+6. Raspberry Pi hardware watchdog for severe OS hangs
+Reboot must restore the complete appliance unattended and return to DIVERA fullscreen. Health checks themselves must not create write/log storms.
+
+## Storage durability
+Keep useful recent diagnostics, but strictly bound writes and disk use:
+- journald hard size/retention limits
+- bounded container logs if containers are used
+- bounded Zigbee2MQTT/Mosquitto/application/watchdog logs
+- normal operation without debug logging
+- controlled Chromium cache/crash reporting
+- avoid unnecessary swap writes; evaluate zram on the pinned OS
+- disk-space monitoring
+- filesystem remains writable; no blanket read-only design
+
+## Security
+- no DIVERA keys, passwords, Wi-Fi/network credentials, tokens, private keys or other deployment secrets in Git
+- DIVERA key stored locally with restrictive permissions and never printed in logs/UI after entry
+- admin UI local/LAN only and authenticated as appropriate; never Internet-exposed
+- outbound HTTPS is sufficient; no inbound Internet port required
