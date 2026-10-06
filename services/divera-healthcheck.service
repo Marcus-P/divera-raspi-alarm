@@ -1,0 +1,5 @@
+[Unit]
+Description=DIVERA appliance functional health check
+[Service]
+Type=oneshot
+ExecStart=/opt/divera-raspi-alarm/services/divera-healthcheck.sh
