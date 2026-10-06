@@ -1,0 +1,22 @@
+# Public/site configuration example. Do not put secrets here.
+
+[site]
+name = "Feuerwehr"
+timezone = "Europe/Berlin"
+
+[kiosk]
+divera_url = ""
+display_idle_minutes = 10
+
+[weekly_test]
+enabled = true
+weekday = "sunday"
+time = "12:00"
+label = "SYSTEMTEST - KEIN EINSATZ"
+
+[monitoring]
+detector_offline_after_hours = 24
+service_recovery_attempts = 3
+
+[zigbee]
+permit_join_seconds = 180
