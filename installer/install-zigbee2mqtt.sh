@@ -6,7 +6,7 @@ curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
 apt-get install -y nodejs
 corepack enable
 id zigbee2mqtt >/dev/null 2>&1 || useradd --system --home /var/lib/zigbee2mqtt --shell /usr/sbin/nologin -G dialout zigbee2mqtt
-if [[ ! -d /opt/zigbee2mqtt/.git ]]; then git clone --depth 1 https://github.com/Koenkk/zigbee2mqtt.git /opt/zigbee2mqtt; fi
+git clone --depth 1 https://github.com/Koenkk/zigbee2mqtt.git /opt/zigbee2mqtt 2>/dev/null || true
 cd /opt/zigbee2mqtt
 corepack pnpm install --frozen-lockfile
 install -d -o zigbee2mqtt -g zigbee2mqtt -m 0750 /var/lib/zigbee2mqtt
