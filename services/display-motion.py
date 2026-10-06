@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
-"""PIR display wake helper. Fixed signal: BCM GPIO23 / physical pin 16.
-This service is isolated from the alarm path."""
+import subprocess,time
+from gpiozero import MotionSensor
 GPIO=23
-def main():
-    raise SystemExit("GPIO backend intentionally not enabled until production OS/session is pinned")
-if __name__=="__main__": main()
+pir=MotionSensor(GPIO)
+def wake():
+ subprocess.run(["wlopm","--on","*"],check=False,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+last=time.monotonic()
+while True:
+ pir.wait_for_motion();wake();last=time.monotonic();pir.wait_for_no_motion();time.sleep(.2)
