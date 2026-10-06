@@ -1,0 +1,7 @@
+[Unit]
+Description=Detect DIVERA Zigbee USB coordinator
+After=dev-serial-by\x2did.target
+[Service]
+Type=oneshot
+ExecStart=/opt/divera-raspi-alarm/installer/detect-zbdongle.sh
+ExecStartPost=/bin/systemctl try-restart zigbee2mqtt.service
