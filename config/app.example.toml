@@ -19,7 +19,7 @@ production_status_ids = []
 
 [weekly_test]
 enabled = true
-weekday = "sunday"
+weekdays = ["sunday"]
 time = "12:00"
 label = "SYSTEMTEST - KEIN EINSATZ"
 
