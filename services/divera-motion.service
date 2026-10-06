@@ -1,0 +1,11 @@
+[Unit]
+Description=DIVERA PIR display wake
+After=graphical.target
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/divera-raspi-alarm/services/display-motion.py
+Restart=always
+RestartSec=5
+User=%i
+[Install]
+WantedBy=graphical.target
