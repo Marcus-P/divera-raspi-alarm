@@ -4,6 +4,10 @@
 
 A simple, self-healing Raspberry Pi appliance for fire stations. Normal administration is performed through a local browser-based UI; shell access is for maintenance only.
 
+## Network
+
+The appliance uses the Raspberry Pi built-in Ethernet interface connected by LAN cable to an external router. The Pi does not manage a SIM/LTE modem. DHCP is the default deployment assumption. Loss of Internet is monitored as a technical fault without misclassifying it as a fire event.
+
 ## Runtime path
 
 Zigbee smoke detector -> SONOFF ZBDongle-P -> Zigbee2MQTT -> Mosquitto -> Alarm service -> DIVERA 24/7 API.
