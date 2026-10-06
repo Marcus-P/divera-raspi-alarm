@@ -1,0 +1,2 @@
+# Re-run adapter discovery whenever a likely CP210x USB serial adapter appears.
+ACTION=="add", SUBSYSTEM=="tty", ENV{ID_BUS}=="usb", TAG+="systemd", ENV{SYSTEMD_WANTS}+="divera-zigbee-detect.service"
