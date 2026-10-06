@@ -61,7 +61,8 @@ Test mode is a hard routing guard and defaults ON.
 After deliberate Test-mode exit, production routing can address personnel according to current DIVERA readiness/status. Exact status mapping is configurable and validated against the unit's real DIVERA setup; stale/unavailable status data gets explicit fail-safe behavior rather than guessed routing.
 
 ## Weekly end-to-end test
-- default Sunday 12:00 local time, configurable
+- schedule is fully configurable in the UI: one or more weekdays can be selected independently and the execution time is selected from 15-minute increments
+- default is Sunday 12:00 local time
 - synthetic per-configured-detector events exercise MQTT/alarm processing/Internet/DIVERA as far as practical
 - unmistakable label: SYSTEMTEST - KEIN EINSATZ
 - separate configurable test recipients
@@ -102,3 +103,10 @@ Keep useful recent diagnostics, but strictly bound writes and disk use:
 - DIVERA key stored locally with restrictive permissions and never printed in logs/UI after entry
 - admin UI local/LAN only and authenticated as appropriate; never Internet-exposed
 - outbound HTTPS is sufficient; no inbound Internet port required
+
+
+## Administration UI structure
+The administration UI is divided into clear sections/pages rather than one overloaded dashboard. At minimum: Overview/System health, DIVERA & routing/Test mode, Smoke detectors/Zigbee, Scheduled tests, Display/Kiosk, and System/Administration.
+
+## Local sudo password management
+The graphical administration UI provides a dedicated password-change workflow for the appliance's local administrative Linux user. It must never store, echo, log, transmit to DIVERA, or commit the password. The UI asks for the current password plus new password and confirmation, uses a narrowly scoped privileged helper to perform the change, and returns only success/failure. The web application itself must not run as root and must not receive unrestricted sudo capability.
