@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 C=/etc/divera-raspi-alarm/config.toml
-D="$(python3 -c 'import tomllib;print(tomllib.load(open("'$C'","rb"))["kiosk"]["divera_url"])')"
-A="$(python3 -c 'import tomllib;print(tomllib.load(open("'$C'","rb"))["kiosk"].get("admin_url","http://127.0.0.1:8765/"))')"
+D="$(python3 -c 'import tomllib;print(tomllib.load(open("'"$C"'","rb"))["kiosk"]["divera_url"])')"
+A="$(python3 -c 'import tomllib;print(tomllib.load(open("'"$C"'","rb"))["kiosk"].get("admin_url","http://127.0.0.1:8765/"))')"
 [[ -n "$D" ]] || D="http://127.0.0.1:8765/divera"
-exec chromium "$D" "$A" --kiosk --noerrdialogs --disable-infobars --no-first-run --enable-features=OverlayScrollbar --start-maximized
+exec chromium "$D" "$A" --kiosk --noerrdialogs --disable-infobars --no-first-run --start-maximized
