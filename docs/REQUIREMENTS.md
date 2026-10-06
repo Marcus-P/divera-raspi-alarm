@@ -26,6 +26,7 @@ The target operator is a non-IT firefighter. Initial and ongoing configuration m
 - Raspberry Pi 4 Model B Rev 1.5, approximately 4 GB RAM
 - 128 GB SanDisk High Endurance microSDXC
 - SONOFF ZBDongle-P (CC2652P / zstack)
-- Zigbee smoke detectors, exact production model to be verified with real hardware
+- frient/Develco Zigbee smoke detector from the selected SMSZB-120 family; exact identifiers and MQTT payload semantics will be verified on the purchased unit during commissioning
 - motion sensor interface to be confirmed before implementation
-- mobile/SIM Internet implementation to be confirmed before implementation
+- Internet: built-in Ethernet connected by LAN cable to an external router; DHCP expected; no SIM/modem configuration on the Pi
+- motion sensor GPIO/interface: to be fixed from the actual wiring/photo before implementation
