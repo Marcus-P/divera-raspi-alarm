@@ -30,3 +30,20 @@ The target operator is a non-IT firefighter. Initial and ongoing configuration m
 - motion sensor interface to be confirmed before implementation
 - Internet: built-in Ethernet connected by LAN cable to an external router; DHCP expected; no SIM/modem configuration on the Pi
 - motion sensor GPIO/interface: to be fixed from the actual wiring/photo before implementation
+
+
+## Mandatory commissioning / test mode
+
+The appliance has an explicit, persistent **Test mode** switch in the graphical UI.
+
+When Test mode is enabled:
+- every alarm event, including a real smoke event received from a detector, is routed only to the explicitly selected DIVERA test recipient(s)
+- production recipient/status logic is not allowed to run
+- the UI must show an unmistakable persistent TEST MODE warning
+- the selected recipients are chosen by human-readable names loaded from DIVERA, while stable DIVERA relation IDs/foreign IDs are stored internally
+- disabling Test mode requires an explicit confirmation; production routing is never enabled merely by rebooting or updating
+- if the recipient list cannot be refreshed/resolved, fail safe: do not fall back to "all users"
+
+Commissioning default: Test mode ON.
+
+The later production mode will support status-dependent routing to personnel who are currently marked appropriately/einsatzbereit in DIVERA. Exact status mapping remains configurable and must be validated against the unit's DIVERA configuration.
