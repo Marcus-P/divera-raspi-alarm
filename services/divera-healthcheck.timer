@@ -1,0 +1,9 @@
+[Unit]
+Description=Periodic DIVERA appliance health check
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=2min
+RandomizedDelaySec=15s
+Persistent=false
+[Install]
+WantedBy=timers.target
