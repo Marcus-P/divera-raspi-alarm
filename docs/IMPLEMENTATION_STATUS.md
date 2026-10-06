@@ -19,3 +19,22 @@
 - reboot escalation until functional health checks prevent reboot loops
 
 No current placeholder can generate a real fire alarm.
+
+
+## First-install progress
+- automatic ZBDongle-P/CP210x discovery via stable /dev/serial/by-id
+- hotplug discovery trigger and Zigbee2MQTT restart hook
+- Mosquitto package included in base installer
+- bounded journald configuration included
+- Zigbee2MQTT configuration template uses zstack, local MQTT, availability, frontend and console-only logging
+- public-repository bootstrap script prepared, but the current private repository still needs an authenticated/published bootstrap path before giving the user the final fresh-SD install command
+
+## Still required before the promised installation hand-off
+- install/pin Zigbee2MQTT itself and wire detected adapter into its generated configuration
+- implement production kiosk startup for the pinned Raspberry Pi OS compositor
+- implement GPIO23 display wake on that compositor
+- implement usable first-run UI flows (DIVERA key, personnel/test recipients, schedule, pairing)
+- implement DIVERA client with the Test-mode recipient guard
+- implement password-change privileged helper safely
+- add service functional health checks and initial recovery policies
+- finalize private-repository bootstrap strategy
