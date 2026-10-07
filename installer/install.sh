@@ -5,9 +5,11 @@ set -Eeuo pipefail
 . /etc/os-release; [[ "${VERSION_CODENAME:-}" == trixie ]] || echo "WARNUNG: Zielplattform ist Raspberry Pi OS Trixie."
 APP=/opt/divera-raspi-alarm; ETC=/etc/divera-raspi-alarm; STATE=/var/lib/divera-raspi-alarm
 apt-get update
-DEBIAN_FRONTEND=noninteractive apt-get install -y python3 python3-venv python3-gpiozero ca-certificates curl git mosquitto mosquitto-clients chromium wlopm
+DEBIAN_FRONTEND=noninteractive apt-get install -y python3 python3-venv python3-gpiozero python3-pam sudo ca-certificates curl git mosquitto mosquitto-clients chromium wlopm
 id divera-alarm >/dev/null 2>&1 || useradd --system --home "$STATE" --shell /usr/sbin/nologin divera-alarm
 install -d -m 0755 "$ETC"; install -d -o divera-alarm -g divera-alarm -m 0750 "$STATE"
+ADMIN_USER="${SUDO_USER:-}"; [[ -n "$ADMIN_USER" && "$ADMIN_USER" != root ]] || { echo "Installation bitte mit sudo aus dem normalen Administratorkonto starten." >&2; exit 1; }
+printf "%s\\n" "$ADMIN_USER" > "$STATE/admin-user"; chown divera-alarm:divera-alarm "$STATE/admin-user"; chmod 0640 "$STATE/admin-user"
 python3 -m venv --system-site-packages "$APP/venv"; "$APP/venv/bin/pip" install --no-cache-dir -r "$APP/app/requirements.txt"
 if [[ ! -f "$STATE/config.toml" ]]; then
  if [[ -f "$ETC/config.toml" ]]; then install -o divera-alarm -g divera-alarm -m 0640 "$ETC/config.toml" "$STATE/config.toml"; else install -o divera-alarm -g divera-alarm -m 0640 "$APP/config/app.example.toml" "$STATE/config.toml"; fi
@@ -18,6 +20,8 @@ if [[ ! -f /etc/credstore.encrypted/divera_access_key ]]; then printf "\n" | sys
 install -m 0644 "$APP/config/mosquitto-divera.conf" /etc/mosquitto/conf.d/divera.conf
 install -m 0755 "$APP/installer/detect-zbdongle.sh" /usr/local/sbin/divera-detect-zbdongle
 install -m 0755 "$APP/installer/set-credential.sh" /usr/local/sbin/divera-set-credential
+install -m 0755 "$APP/installer/change-admin-password.sh" /usr/local/sbin/divera-change-admin-password
+install -o root -g root -m 0440 "$APP/config/divera-admin-sudoers" /etc/sudoers.d/divera-admin
 chmod 0755 "$APP/services/divera-kiosk.sh" "$APP/services/divera-healthcheck.sh"
 install -m 0644 "$APP/services/divera-admin.service" "$APP/services/divera-alarm.service" /etc/systemd/system/
 install -m 0644 "$APP/services/divera-zigbee-detect.service" /etc/systemd/system/
