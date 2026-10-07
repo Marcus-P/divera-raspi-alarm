@@ -56,12 +56,10 @@ Das Repository ist öffentlich. Es wird kein GitHub-Token benötigt.
 
 ```bash
 git clone --depth 1 --branch develop https://github.com/Marcus-P/divera-raspi-alarm.git /tmp/divera-raspi-alarm
-sudo mkdir -p /opt/divera-raspi-alarm
-sudo cp -a /tmp/divera-raspi-alarm/. /opt/divera-raspi-alarm/
-sudo bash /opt/divera-raspi-alarm/installer/install.sh
+sudo bash /tmp/divera-raspi-alarm/installer/bootstrap-public.sh
 ```
 
-Der Installer:
+Die Bootstrap-Routine legt bereits die erste Installation versioniert unter `/opt/divera-raspi-alarm/releases/<Version>/` ab und setzt `/opt/divera-raspi-alarm/current` atomar darauf. Damit verwendet bereits die Erstinstallation denselben Rollback-Pfad wie spätere Updates.\n\nDer Installer:
 
 1. prüft 64-Bit-ARM
 2. installiert die Systempakete
