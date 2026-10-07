@@ -8,7 +8,9 @@ display_idle_minutes=10
 [routing]
 test_mode=true
 test_recipient_ids=[]
+technical_recipient_ids=[]
 production_status_ids=[]
+production_commissioned=false
 [weekly_test]
 enabled=true
 weekdays=["sunday"]
@@ -18,6 +20,7 @@ recipient_ids=[]
 [monitoring]
 detector_offline_after_hours=24
 service_recovery_attempts=3
+reboot_escalation_enabled=false
 [zigbee]
 permit_join_seconds=180
 [hardware]
