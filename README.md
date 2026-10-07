@@ -15,7 +15,14 @@ A robust Raspberry Pi appliance for displaying DIVERA 24/7 and forwarding Zigbee
 - endurance-friendly, strictly bounded logging
 - no deployment credentials or secrets in Git
 
-See `docs/REQUIREMENTS.md` and `docs/ARCHITECTURE.md` for the current specification.
+## Documentation
+
+- [Anwenderdokumentation](docs/ANWENDERDOKUMENTATION.md)
+- [Vollständige Installation und Inbetriebnahme](docs/INSTALLATION.md)
+- [Weboberfläche mit Referenzansichten](docs/UI.md)
+- [Update- und Rollbackkonzept](docs/UPDATES.md)
+- [Anforderungen](docs/REQUIREMENTS.md)
+- [Architektur](docs/ARCHITECTURE.md)
 
 ## Security
 
