@@ -49,3 +49,10 @@ Rules:
 9. If a proposed feature cannot satisfy this contract, it is not eligible for a normal stable release. It must be redesigned rather than shipped as a breaking update.
 
 This project therefore does not use a major-version bump as permission for breaking appliance updates. The installed appliance is expected to remain continuously upgradeable.
+
+
+## Release documentation gate
+
+Every stable release must update both `docs/ANWENDERDOKUMENTATION.md` and `docs/INSTALLATION.md`. Both files carry a `Dokumentationsstand` matching `VERSION`. The GitHub release workflow rejects a tag when either document does not match the release version, and from the second release onward also rejects a release if either document was unchanged since the previous tag.
+
+Stable releases require GitHub release immutability. The appliance refuses to install a release whose GitHub API metadata does not report `immutable: true`, and verifies the downloaded asset against GitHub's published SHA-256 asset digest before privileged installation. Release creation is draft-first so all assets exist before publication/immutability.
