@@ -1,7 +1,6 @@
 [Unit]
-Description=Detect DIVERA Zigbee USB coordinator
-After=dev-serial-by\x2did.target
+Description=Detect and configure SONOFF ZBDongle-P
+After=mosquitto.service
 [Service]
 Type=oneshot
-ExecStart=/opt/divera-raspi-alarm/installer/detect-zbdongle.sh
-ExecStartPost=/bin/systemctl try-restart zigbee2mqtt.service
+ExecStart=/usr/local/sbin/divera-detect-zbdongle
