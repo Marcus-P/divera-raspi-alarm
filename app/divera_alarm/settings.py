@@ -21,7 +21,7 @@ class WeeklyTest(BaseModel):
  label:str="SYSTEMTEST - KEIN EINSATZ"
  recipient_ids:list[int]=Field(default_factory=list)
 class Monitoring(BaseModel): detector_offline_after_hours:int=24; service_recovery_attempts:int=3; reboot_escalation_enabled:bool=False
-class Zigbee(BaseModel): permit_join_seconds:int=Field(180,ge=30,le=600)
+class Zigbee(BaseModel): permit_join_seconds:int=Field(180,ge=30,le=254)
 class Hardware(BaseModel): pir_bcm_gpio:int=23
 class Settings(BaseModel):
  site:Site=Site(); kiosk:Kiosk=Kiosk(); routing:Routing=Routing(); weekly_test:WeeklyTest=WeeklyTest()
