@@ -1,2 +1,3 @@
 divera-alarm ALL=(root) NOPASSWD: /usr/local/sbin/divera-set-credential divera_access_key
 divera-alarm ALL=(root) NOPASSWD: /usr/local/sbin/divera-change-admin-password *
+divera-alarm ALL=(root) NOPASSWD: /usr/local/sbin/divera-apply-recovery-policy
