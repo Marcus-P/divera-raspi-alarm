@@ -15,5 +15,5 @@ rm -rf /opt/zigbee2mqtt
 mv /opt/zigbee2mqtt.new /opt/zigbee2mqtt
 chown -R zigbee2mqtt:zigbee2mqtt /opt/zigbee2mqtt
 install -d -o zigbee2mqtt -g zigbee2mqtt -m 0750 /var/lib/zigbee2mqtt
-install -m 0644 /opt/divera-raspi-alarm/services/zigbee2mqtt.service /etc/systemd/system/zigbee2mqtt.service
+install -m 0644 /opt/divera-raspi-alarm/current/services/zigbee2mqtt.service /etc/systemd/system/zigbee2mqtt.service
 systemctl daemon-reload
