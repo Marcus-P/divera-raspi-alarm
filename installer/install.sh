@@ -27,4 +27,6 @@ udevadm control --reload; systemctl daemon-reload; systemctl restart systemd-jou
 systemctl enable --now mosquitto divera-admin.service divera-alarm.service divera-healthcheck.timer
 /usr/local/sbin/divera-detect-zbdongle || true
 systemctl enable zigbee2mqtt.service
-echo "Installation abgeschlossen. Testmodus bleibt aktiv. Neustart: sudo reboot"
+echo "Installation abgeschlossen. Führe Selbsttest aus ..."
+bash "$APP/installer/verify-install.sh"
+echo "Selbsttest bestanden. Testmodus bleibt aktiv. Neustart: sudo reboot"
