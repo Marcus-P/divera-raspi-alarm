@@ -13,7 +13,7 @@ python3 -m venv --system-site-packages "$APP/venv"; "$APP/venv/bin/pip" install 
 [[ -f "$ETC/secrets.env" ]] || { printf '# Local secrets. Never commit.\n' >"$ETC/secrets.env"; chown root:divera-alarm "$ETC/secrets.env"; chmod 0640 "$ETC/secrets.env"; }
 install -m 0644 "$APP/config/mosquitto-divera.conf" /etc/mosquitto/conf.d/divera.conf
 install -m 0755 "$APP/installer/detect-zbdongle.sh" /usr/local/sbin/divera-detect-zbdongle
-install -m 0644 "$APP/services/divera-admin.service" /etc/systemd/system/
+install -m 0644 "$APP/services/divera-admin.service" "$APP/services/divera-alarm.service" /etc/systemd/system/
 install -m 0644 "$APP/services/divera-zigbee-detect.service" /etc/systemd/system/
 install -m 0644 "$APP/services/divera-healthcheck.service" "$APP/services/divera-healthcheck.timer" /etc/systemd/system/
 install -m 0644 "$APP/services/99-divera-zbdongle.rules" /etc/udev/rules.d/
@@ -21,7 +21,7 @@ install -d /etc/systemd/journald.conf.d; install -m 0644 "$APP/config/journald-d
 "$APP/installer/install-zigbee2mqtt.sh"
 "$APP/installer/install-kiosk.sh" "${SUDO_USER:-}"
 udevadm control --reload; systemctl daemon-reload; systemctl restart systemd-journald mosquitto
-systemctl enable --now mosquitto divera-admin.service divera-healthcheck.timer
+systemctl enable --now mosquitto divera-admin.service divera-alarm.service divera-healthcheck.timer
 /usr/local/sbin/divera-detect-zbdongle || true
 systemctl enable zigbee2mqtt.service
 echo "Installation abgeschlossen. Testmodus bleibt aktiv. Neustart: sudo reboot"
