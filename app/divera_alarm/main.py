@@ -83,7 +83,7 @@ def zigbee(_=Depends(auth)):
 @app.post("/zigbee/pair")
 def pair(csrf_token:str=Form(alias="csrf"),_=Depends(auth)):
  csrf(csrf_token);seconds=load_settings().zigbee.permit_join_seconds
- publish.single("zigbee2mqtt/bridge/request/permit_join",payload=json.dumps({"value":True,"time":seconds}),hostname="127.0.0.1")
+ publish.single("zigbee2mqtt/bridge/request/permit_join",payload=json.dumps({"time":seconds}),hostname="127.0.0.1")
  return RedirectResponse("/zigbee",303)
 
 @app.get("/tests",response_class=HTMLResponse)
