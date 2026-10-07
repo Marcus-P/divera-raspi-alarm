@@ -5,7 +5,7 @@ After=network.target
 Type=simple
 User=divera-alarm
 Group=divera-alarm
-Environment=DRA_CONFIG=/etc/divera-raspi-alarm/config.toml
+Environment=DRA_CONFIG=/var/lib/divera-raspi-alarm/config.toml
 LoadCredentialEncrypted=divera_access_key:/etc/credstore.encrypted/divera_access_key
 WorkingDirectory=/opt/divera-raspi-alarm/app
 ExecStart=/opt/divera-raspi-alarm/venv/bin/uvicorn divera_alarm.main:app --host 127.0.0.1 --port 8765
