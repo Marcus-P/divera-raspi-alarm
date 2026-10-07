@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 import paho.mqtt.client as mqtt
 from .settings import load_settings
-from .divera import send_alarm
+from .divera import send_alarm,send_news
 
 log=logging.getLogger("divera-alarm");logging.basicConfig(level=logging.INFO)
 STATE=Path("/var/lib/divera-raspi-alarm/detectors.json")
@@ -27,7 +27,7 @@ async def technical(device,kind,text):
  if key in fault_sent:return
  if not c.routing.technical_recipient_ids:
   log.error("Technical fault has no configured recipients: %s %s",device,kind);return
- await send_alarm(f"TECHNISCHE STÖRUNG · {device}",text,c.routing.technical_recipient_ids);fault_sent.add(key)
+ await send_news(f"TECHNISCHE STÖRUNG · {device}",text,c.routing.technical_recipient_ids);fault_sent.add(key)
  log.warning("Technical notification sent: %s",key)
 
 async def handle_zigbee(topic,payload):
