@@ -10,7 +10,8 @@ id divera-alarm >/dev/null 2>&1 || useradd --system --home "$STATE" --shell /usr
 install -d -m 0755 "$ETC"; install -d -o divera-alarm -g divera-alarm -m 0750 "$STATE"
 python3 -m venv --system-site-packages "$APP/venv"; "$APP/venv/bin/pip" install --no-cache-dir -r "$APP/app/requirements.txt"
 [[ -f "$ETC/config.toml" ]] || install -o root -g divera-alarm -m 0640 "$APP/config/app.example.toml" "$ETC/config.toml"
-[[ -f "$ETC/secrets.env" ]] || { printf '# Local secrets. Never commit.\n' >"$ETC/secrets.env"; chown root:divera-alarm "$ETC/secrets.env"; chmod 0640 "$ETC/secrets.env"; }
+install -d -o root -g root -m 0700 /etc/credstore.encrypted
+rm -f "$ETC/secrets.env"
 install -m 0644 "$APP/config/mosquitto-divera.conf" /etc/mosquitto/conf.d/divera.conf
 install -m 0755 "$APP/installer/detect-zbdongle.sh" /usr/local/sbin/divera-detect-zbdongle
 install -m 0644 "$APP/services/divera-admin.service" "$APP/services/divera-alarm.service" /etc/systemd/system/
