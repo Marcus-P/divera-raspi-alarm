@@ -11,7 +11,7 @@ systemctl is-active --quiet mosquitto && ok "Mosquitto" || bad "Mosquitto"
 systemctl is-active --quiet divera-admin && curl -fsS --max-time 5 http://127.0.0.1:8765/health >/dev/null && ok "Admin UI" || bad "Admin UI"
 systemctl is-active --quiet divera-alarm && ok "alarm worker" || bad "alarm worker"
 systemctl is-enabled --quiet divera-healthcheck.timer && ok "health timer" || bad "health timer"
-[[ -f /etc/divera-raspi-alarm/config.toml ]] && ok "persistent config" || bad "persistent config"
+[[ -f /var/lib/divera-raspi-alarm/config.toml ]] && ok "persistent config" || bad "persistent config"
 [[ ! -f /etc/divera-raspi-alarm/secrets.env ]] && ok "no plaintext secret store" || bad "plaintext secret store exists"
 if grep -q '^ZIGBEE_ADAPTER=/dev/' /etc/divera-raspi-alarm/zigbee-adapter.env 2>/dev/null; then
  systemctl is-active --quiet zigbee2mqtt && ok "Zigbee2MQTT" || bad "Zigbee2MQTT with connected adapter"
