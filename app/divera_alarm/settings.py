@@ -28,7 +28,7 @@ class Settings(BaseModel):
  monitoring:Monitoring=Monitoring(); zigbee:Zigbee=Zigbee(); hardware:Hardware=Hardware()
 
 def load_settings():
- if not CONFIG_PATH.exists(): return Settings()
+ if not CONFIG_PATH.exists():return Settings()
  with CONFIG_PATH.open("rb") as h:return Settings.model_validate(tomllib.load(h))
 
 def save_settings(settings:Settings):
@@ -46,6 +46,11 @@ def save_settings(settings:Settings):
 
 def credential(name:str)->str:
  p=CREDENTIALS_DIRECTORY/name
- v=p.read_text(encoding="utf-8").strip() if p.is_file() else ""\n return "" if v=="__UNCONFIGURED__" else v
-def secrets(): return {"DIVERA_ACCESS_KEY":credential("divera_access_key"),"DIVERA_SYSTEM_KEY":credential("divera_system_key")}
-def secret_present(n): return bool(secrets().get(n))
+ v=p.read_text(encoding="utf-8").strip() if p.is_file() else ""
+ return "" if v=="__UNCONFIGURED__" else v
+
+def secrets():
+ return {"DIVERA_ACCESS_KEY":credential("divera_access_key"),"DIVERA_SYSTEM_KEY":credential("divera_system_key")}
+
+def secret_present(name:str):
+ return bool(secrets().get(name))
