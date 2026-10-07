@@ -17,7 +17,12 @@ PY
 python3 -m venv --system-site-packages "$DEST/venv"
 "$DEST/venv/bin/pip" install --no-cache-dir -r "$DEST/app/requirements.txt"
 ln -sfn "$DEST" "$ROOT/current.new";mv -Tf "$ROOT/current.new" "$ROOT/current"
-install -m 0644 "$DEST/services/divera-admin.service" "$DEST/services/divera-alarm.service" "$DEST/services/divera-healthcheck.service" "$DEST/services/divera-healthcheck.timer" /etc/systemd/system/
+install -m 0644 "$DEST/services/divera-admin.service" "$DEST/services/divera-alarm.service" "$DEST/services/divera-healthcheck.service" "$DEST/services/divera-healthcheck.timer" "$DEST/services/divera-technical-notify@.service" /etc/systemd/system/
+install -m 0755 "$DEST/installer/set-credential.sh" /usr/local/sbin/divera-set-credential
+install -m 0755 "$DEST/installer/change-admin-password.sh" /usr/local/sbin/divera-change-admin-password
+install -m 0755 "$DEST/installer/apply-recovery-policy.sh" /usr/local/sbin/divera-apply-recovery-policy
+install -m 0755 "$DEST/installer/start-update.sh" /usr/local/sbin/divera-start-update
+install -m 0440 "$DEST/config/divera-admin-sudoers" /etc/sudoers.d/divera-admin
 systemctl daemon-reload
 systemctl restart divera-alarm divera-admin
 sleep 5
