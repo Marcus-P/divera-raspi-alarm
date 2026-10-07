@@ -27,7 +27,7 @@ install -o root -g root -m 0440 "$APP/config/divera-admin-sudoers" /etc/sudoers.
 chmod 0755 "$APP/services/divera-kiosk.sh" "$APP/services/divera-healthcheck.sh"
 install -m 0644 "$APP/services/divera-admin.service" "$APP/services/divera-alarm.service" /etc/systemd/system/
 install -m 0644 "$APP/services/divera-zigbee-detect.service" /etc/systemd/system/
-install -m 0644 "$APP/services/divera-healthcheck.service" "$APP/services/divera-healthcheck.timer" /etc/systemd/system/
+install -m 0644 "$APP/services/divera-healthcheck.service" "$APP/services/divera-healthcheck.timer" "$APP/services/divera-technical-notify@.service" /etc/systemd/system/
 install -m 0644 "$APP/services/99-divera-zbdongle.rules" /etc/udev/rules.d/
 install -d /etc/systemd/journald.conf.d; install -m 0644 "$APP/config/journald-divera.conf" /etc/systemd/journald.conf.d/60-divera-appliance.conf
 bash "$APP/installer/install-zigbee2mqtt.sh"
