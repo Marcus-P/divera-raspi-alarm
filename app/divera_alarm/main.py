@@ -7,6 +7,7 @@ from fastapi.responses import HTMLResponse,RedirectResponse
 from fastapi.security import HTTPBasic,HTTPBasicCredentials
 from .settings import load_settings,save_settings,secret_present
 from .divera import users
+from .updater import latest,download,installed_version
 
 app=FastAPI(title="DIVERA Raspberry Alarm",docs_url=None,redoc_url=None)
 security=HTTPBasic()
@@ -99,7 +100,8 @@ def save_display(csrf_token:str=Form(alias="csrf"),url:str=Form(""),idle:int=For
 def system(_=Depends(auth)):
  c=load_settings(); recovery=form("/system/recovery",f'<label><input type="checkbox" name="enabled" {"checked" if c.monitoring.reboot_escalation_enabled else ""}> Reboot-Eskalation und Hardware-Watchdog nach Inbetriebnahme aktivieren</label>',"Wiederherstellungsrichtlinie speichern")
  p=form("/system/password",'<label>Aktuelles Passwort <input type="password" name="current" required></label><br><label>Neues Passwort <input type="password" name="new" minlength="10" required></label><br><label>Wiederholen <input type="password" name="confirm" minlength="10" required></label>',"Passwort ändern")
- return page("System / Administration",'<div class="grid"><div class="card"><h3>Dienste</h3><p>Mosquitto · Zigbee2MQTT · Alarmdienst · Kiosk</p></div><div class="card"><h3>Wiederherstellung</h3><p>Healthchecks und gezielte Neustarts.</p>'+recovery+'</div></div><div class="card"><h3>Administrator-Passwort</h3>'+p+'</div>')
+ update=form("/system/update",'<p>Installierte Version: '+esc(installed_version())+'</p>',"Nach stabilem Update suchen und installieren")
+ return page("System / Administration",'<div class="grid"><div class="card"><h3>Dienste</h3><p>Mosquitto · Zigbee2MQTT · Alarmdienst · Kiosk</p></div><div class="card"><h3>Wiederherstellung</h3><p>Healthchecks und gezielte Neustarts.</p>'+recovery+'</div></div><div class="card"><h3>Administrator-Passwort</h3>'+p+'</div><div class="card"><h3>Updates</h3>'+update+'<p class="muted">Nur unveränderliche stabile GitHub Releases mit SHA-256-Digest werden akzeptiert.</p></div>')
 @app.post("/system/password")
 def password(csrf_token:str=Form(alias="csrf"),current:str=Form(),new:str=Form(),confirm:str=Form(),user=Depends(auth)):
  csrf(csrf_token)
@@ -113,3 +115,12 @@ def recovery(csrf_token:str=Form(alias="csrf"),enabled:str|None=Form(None),_=Dep
  csrf(csrf_token);c=load_settings();c.monitoring.reboot_escalation_enabled=enabled is not None;save_settings(c)
  subprocess.run(["sudo","/usr/local/sbin/divera-apply-recovery-policy"],check=True)
  return RedirectResponse("/system",303)
+
+@app.post("/system/update")
+async def update_system(csrf_token:str=Form(alias="csrf"),_=Depends(auth)):
+ csrf(csrf_token);info=await latest()
+ if not info["newer"]:return RedirectResponse("/system",303)
+ if not info["immutable"]:raise HTTPException(409,"Das neueste Release ist nicht unveränderlich und wird nicht installiert.")
+ stage,digest=await download(info)
+ subprocess.run(["sudo","/usr/local/sbin/divera-start-update",str(stage),info["version"],digest],check=True)
+ return HTMLResponse(page("Update gestartet",f'<div class="card"><h3>Version {esc(info["version"])}</h3><p>Das Update läuft im Hintergrund. Die Administration wird während des Dienstneustarts kurz nicht erreichbar sein. Bei fehlgeschlagenem Healthcheck erfolgt automatisch ein Rollback.</p></div>'))
