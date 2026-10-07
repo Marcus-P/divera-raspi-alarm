@@ -1,25 +1,32 @@
-# First installation target
+# First installation
 
-Do not use this document as a production approval. It defines the first commissioning run.
+Target: Raspberry Pi 4 with a fresh current Raspberry Pi OS 64-bit Desktop installation on the endurance microSD, wired Ethernet and SSH enabled.
 
-## Prerequisites
-- Raspberry Pi 4
-- fresh supported Raspberry Pi OS 64-bit Desktop installation
-- wired Ethernet with Internet access
-- 128 GB endurance microSD
-- optional at first boot: SONOFF ZBDongle-P; it may also be inserted later
+The repository is public, so the initial bootstrap needs no GitHub account, token or stored repository credential.
 
-## Coordinator behavior
-The installer and udev/systemd hook scan stable Linux USB serial identities under /dev/serial/by-id. A matching SONOFF/ITead/CP2102-family serial device is recorded as the zstack adapter. Replugging or first insertion triggers discovery again and restarts Zigbee2MQTT when installed.
+## Bootstrap
 
-The stable by-id path is preferred over ttyUSB0 because enumeration numbers may change across reboots.
+Run from the freshly installed Pi:
 
-If no coordinator is connected, the rest of the appliance must remain operational and report the missing coordinator as a technical/setup state.
+```bash
+git clone --depth 1 --branch develop https://github.com/Marcus-P/divera-raspi-alarm.git /tmp/divera-raspi-alarm
+sudo mkdir -p /opt/divera-raspi-alarm
+sudo cp -a /tmp/divera-raspi-alarm/. /opt/divera-raspi-alarm/
+sudo bash /opt/divera-raspi-alarm/installer/install.sh
+```
 
-## Repository bootstrap
-A public repository can be cloned directly by bootstrap-public.sh. A private repository cannot be anonymously cloned by a fresh Pi. Do not put a GitHub PAT in a command line, URL, image, repository or log.
+The installer aborts on errors and finishes with `installer/verify-install.sh`. Only a passed self-test is considered a successful first installation.
 
-For the current private-development phase, installation requires an authenticated Git checkout/deploy mechanism or a deliberately published release/bootstrap artifact. Before the user is instructed to wipe/install the production card, one of those paths must be finalized.
+## What is persistent
 
-## Commissioning safety
-Test mode remains ON by default. Live production recipient routing is not enabled merely by installing the appliance.
+Site configuration, encrypted systemd credential blobs, Zigbee2MQTT state and paired-device state live outside replaceable application releases. No plaintext `.env` secret store is used. A reboot does not require credential entry.
+
+## First reboot
+
+After a successful self-test run `sudo reboot`. Desktop autologin starts the labwc session; Chromium opens the local administration UI until a DIVERA kiosk URL is configured. Once configured, DIVERA is tab 1 and the local UI tab 2.
+
+The SONOFF ZBDongle-P may be present during installation or plugged in later. Its stable `/dev/serial/by-id` identity is detected and Zigbee2MQTT is configured for `zstack`.
+
+## Safety state
+
+Test mode is ON by default. Production recipient routing remains locked until the real DIVERA account status mapping and the purchased detector's real MQTT payloads have been observed during commissioning.
