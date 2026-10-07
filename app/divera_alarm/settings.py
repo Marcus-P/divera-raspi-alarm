@@ -47,5 +47,5 @@ def save_settings(settings:Settings):
 def credential(name:str)->str:
  p=CREDENTIALS_DIRECTORY/name
  return p.read_text(encoding="utf-8").strip() if p.is_file() else ""
-def secrets(): return {"DIVERA_ACCESS_KEY":credential("divera_access_key")}
+def secrets(): return {"DIVERA_ACCESS_KEY":credential("divera_access_key"),"DIVERA_SYSTEM_KEY":credential("divera_system_key")}
 def secret_present(n): return bool(secrets().get(n))
