@@ -3,7 +3,7 @@ set -Eeuo pipefail
 [[ $EUID -eq 0 ]] || { echo "Bitte mit sudo ausführen." >&2; exit 1; }
 [[ "$(uname -m)" == "aarch64" ]] || { echo "Raspberry Pi OS 64-bit erforderlich." >&2; exit 1; }
 . /etc/os-release; [[ "${VERSION_CODENAME:-}" == trixie ]] || echo "WARNUNG: Zielplattform ist Raspberry Pi OS Trixie."
-APP=/opt/divera-raspi-alarm; ETC=/etc/divera-raspi-alarm; STATE=/var/lib/divera-raspi-alarm
+APP=/opt/divera-raspi-alarm/current; ETC=/etc/divera-raspi-alarm; STATE=/var/lib/divera-raspi-alarm
 apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get install -y python3 python3-venv python3-gpiozero python3-pam sudo ca-certificates curl git mosquitto mosquitto-clients chromium wlopm
 id divera-alarm >/dev/null 2>&1 || useradd --system --home "$STATE" --shell /usr/sbin/nologin divera-alarm
