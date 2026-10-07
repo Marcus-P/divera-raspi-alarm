@@ -52,15 +52,23 @@ def home(_=Depends(auth)):
 @app.get("/divera",response_class=HTMLResponse)
 def div_page(_=Depends(auth)):
  c=load_settings()
- keyform=form("/divera/key",'<label>Neuer DIVERA Access-Key <input name="key" type="password" autocomplete="new-password" required></label>',"Access-Key verschlüsselt speichern")
+ keyform=form("/divera/key",'<label>Neuer DIVERA Alarm-Access-Key <input name="key" type="password" autocomplete="new-password" required></label>',"Alarm-Key verschlüsselt speichern")
+ systemform=form("/divera/system-key",'<label>DIVERA Systemnutzer-Key <input name="key" type="password" autocomplete="new-password" required></label>',"Systemnutzer-Key verschlüsselt speichern")
  routing=form("/divera/routing",f'<label>Testempfänger-IDs <input name="test_ids" value="{esc(",".join(map(str,c.routing.test_recipient_ids)))}"></label><br><label>Technikempfänger-IDs <input name="technical_ids" value="{esc(",".join(map(str,c.routing.technical_recipient_ids)))}"></label>',"Empfänger speichern")
- return page("DIVERA & Routing",f'<div class="card"><h3>Verbindung</h3><p>Access-Key: {"eingerichtet" if secret_present("DIVERA_ACCESS_KEY") else "nicht eingerichtet"}</p>{keyform}</div><div class="card"><h3>Empfänger</h3><p class="muted">Die endgültige Namensauswahl wird nach Validierung der realen DIVERA-Antwortstruktur aktiviert. Bis dahin werden keine Produktionsstatus angenommen.</p>{routing}</div>')
+ return page("DIVERA & Routing",f'<div class="card"><h3>Verbindung</h3><p>Access-Key: {"eingerichtet" if secret_present("DIVERA_ACCESS_KEY") else "nicht eingerichtet"}</p>{keyform}{systemform}</div><div class="card"><h3>Empfänger</h3><p class="muted">Die endgültige Namensauswahl wird nach Validierung der realen DIVERA-Antwortstruktur aktiviert. Bis dahin werden keine Produktionsstatus angenommen.</p>{routing}</div>')
 
 @app.post("/divera/key")
 def set_key(csrf_token:str=Form(alias="csrf"),key:str=Form(),_=Depends(auth)):
  csrf(csrf_token)
  if len(key.strip())<4:raise HTTPException(400,"Access-Key ist leer/zu kurz")
  subprocess.run(["sudo","/usr/local/sbin/divera-set-credential","divera_access_key"],input=key.strip()+"\n",text=True,check=True)
+ return RedirectResponse("/divera",303)
+
+@app.post("/divera/system-key")
+def set_system_key(csrf_token:str=Form(alias="csrf"),key:str=Form(),_=Depends(auth)):
+ csrf(csrf_token)
+ if len(key.strip())<4:raise HTTPException(400,"Systemnutzer-Key ist leer/zu kurz")
+ subprocess.run(["sudo","/usr/local/sbin/divera-set-credential","divera_system_key"],input=key.strip()+"\n",text=True,check=True)
  return RedirectResponse("/divera",303)
 
 @app.post("/divera/routing")
