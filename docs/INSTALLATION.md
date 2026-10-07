@@ -1,5 +1,7 @@
 # Vollständige Installation und Inbetriebnahme
 
+**Dokumentationsstand: 0.1.0**
+
 Diese Anleitung führt von einer leeren microSD-Karte bis zur geprüften Inbetriebnahme.
 
 > **Stand:** Die Softwareinstallation ist vorbereitet. Schritte, die reale Hardware, den konkreten Rauchwarnmelder oder das reale DIVERA-Konto voraussetzen, werden bei der ersten Inbetriebnahme verifiziert und anschließend mit den bestätigten Details ergänzt.
