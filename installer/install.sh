@@ -16,7 +16,7 @@ if [[ ! -f "$STATE/config.toml" ]]; then
 fi
 install -d -o root -g root -m 0700 /etc/credstore.encrypted
 rm -f "$ETC/secrets.env"
-if [[ ! -f /etc/credstore.encrypted/divera_access_key ]]; then printf "\n" | systemd-creds encrypt --name=divera_access_key - /etc/credstore.encrypted/divera_access_key; chmod 0600 /etc/credstore.encrypted/divera_access_key; fi
+for cred in divera_access_key divera_system_key; do if [[ ! -f "/etc/credstore.encrypted/$cred" ]]; then printf "\n" | systemd-creds encrypt --name="$cred" - "/etc/credstore.encrypted/$cred"; chmod 0600 "/etc/credstore.encrypted/$cred"; fi; done
 install -m 0644 "$APP/config/mosquitto-divera.conf" /etc/mosquitto/conf.d/divera.conf
 install -m 0755 "$APP/installer/detect-zbdongle.sh" /usr/local/sbin/divera-detect-zbdongle
 install -m 0755 "$APP/installer/set-credential.sh" /usr/local/sbin/divera-set-credential
