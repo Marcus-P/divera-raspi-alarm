@@ -97,12 +97,19 @@ def save_display(csrf_token:str=Form(alias="csrf"),url:str=Form(""),idle:int=For
 
 @app.get("/system",response_class=HTMLResponse)
 def system(_=Depends(auth)):
+ c=load_settings(); recovery=form("/system/recovery",f'<label><input type="checkbox" name="enabled" {"checked" if c.monitoring.reboot_escalation_enabled else ""}> Reboot-Eskalation und Hardware-Watchdog nach Inbetriebnahme aktivieren</label>',"Wiederherstellungsrichtlinie speichern")
  p=form("/system/password",'<label>Aktuelles Passwort <input type="password" name="current" required></label><br><label>Neues Passwort <input type="password" name="new" minlength="10" required></label><br><label>Wiederholen <input type="password" name="confirm" minlength="10" required></label>',"Passwort ändern")
- return page("System / Administration",'<div class="grid"><div class="card"><h3>Dienste</h3><p>Mosquitto · Zigbee2MQTT · Alarmdienst · Kiosk</p></div><div class="card"><h3>Wiederherstellung</h3><p>Healthchecks und gezielte Neustarts.</p></div></div><div class="card"><h3>Administrator-Passwort</h3>'+p+'</div>')
+ return page("System / Administration",'<div class="grid"><div class="card"><h3>Dienste</h3><p>Mosquitto · Zigbee2MQTT · Alarmdienst · Kiosk</p></div><div class="card"><h3>Wiederherstellung</h3><p>Healthchecks und gezielte Neustarts.</p>'+recovery+'</div></div><div class="card"><h3>Administrator-Passwort</h3>'+p+'</div>')
 @app.post("/system/password")
 def password(csrf_token:str=Form(alias="csrf"),current:str=Form(),new:str=Form(),confirm:str=Form(),user=Depends(auth)):
  csrf(csrf_token)
  if not pam.pam().authenticate(user,current):raise HTTPException(403,"Aktuelles Passwort ist falsch")
  if new!=confirm or len(new)<10:raise HTTPException(400,"Neue Passwörter stimmen nicht überein oder sind zu kurz")
  subprocess.run(["sudo","/usr/local/sbin/divera-change-admin-password",user],input=new+"\n",text=True,check=True)
+ return RedirectResponse("/system",303)
+
+@app.post("/system/recovery")
+def recovery(csrf_token:str=Form(alias="csrf"),enabled:str|None=Form(None),_=Depends(auth)):
+ csrf(csrf_token);c=load_settings();c.monitoring.reboot_escalation_enabled=enabled is not None;save_settings(c)
+ subprocess.run(["sudo","/usr/local/sbin/divera-apply-recovery-policy"],check=True)
  return RedirectResponse("/system",303)
