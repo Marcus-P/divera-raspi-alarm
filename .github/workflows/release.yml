@@ -1,0 +1,40 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  validate-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - name: Validate version and mandatory documentation
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(tr -d '[:space:]' < VERSION)"
+          test "v$version" = "$GITHUB_REF_NAME"
+          grep -Fq "Dokumentationsstand: $version" docs/ANWENDERDOKUMENTATION.md
+          grep -Fq "Dokumentationsstand: $version" docs/INSTALLATION.md
+          python3 -m compileall -q app
+          find installer services -type f -name '*.sh' -print0 | xargs -0 -n1 bash -n
+      - name: Require documentation changes since previous release
+        shell: bash
+        run: |
+          set -euo pipefail
+          prev="$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)"
+          if [ -n "$prev" ]; then
+            git diff --quiet "$prev"..HEAD -- docs/ANWENDERDOKUMENTATION.md && { echo "Anwenderdokumentation was not updated"; exit 1; } || true
+            git diff --quiet "$prev"..HEAD -- docs/INSTALLATION.md && { echo "Installationsanleitung was not updated"; exit 1; } || true
+          fi
+      - name: Build release artifact
+        run: |
+          mkdir -p dist/stage
+          rsync -a --exclude '.git' --exclude 'dist' ./ dist/stage/
+          tar -C dist/stage -czf "dist/divera-raspi-alarm-$GITHUB_REF_NAME.tar.gz" .
+          cd dist && sha256sum "divera-raspi-alarm-$GITHUB_REF_NAME.tar.gz" > SHA256SUMS
+      - name: Publish GitHub Release
+        env: {GH_TOKEN: "${{ github.token }}"}
+        run: gh release create "$GITHUB_REF_NAME" "dist/divera-raspi-alarm-$GITHUB_REF_NAME.tar.gz" dist/SHA256SUMS --generate-notes --verify-tag
