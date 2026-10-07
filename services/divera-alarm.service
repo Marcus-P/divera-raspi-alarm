@@ -1,0 +1,22 @@
+[Unit]
+Description=DIVERA smoke alarm MQTT worker
+After=network-online.target mosquitto.service
+Requires=mosquitto.service
+[Service]
+User=divera-alarm
+Group=divera-alarm
+Environment=DRA_CONFIG=/etc/divera-raspi-alarm/config.toml
+Environment=DRA_SECRETS=/etc/divera-raspi-alarm/secrets.env
+WorkingDirectory=/opt/divera-raspi-alarm/app
+ExecStart=/opt/divera-raspi-alarm/venv/bin/python -m divera_alarm.worker
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+[Install]
+WantedBy=multi-user.target
