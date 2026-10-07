@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
-C=/etc/divera-raspi-alarm/config.toml
+C=/var/lib/divera-raspi-alarm/config.toml
 while true; do
  D="$(python3 -c 'import tomllib;print(tomllib.load(open("'"$C"'","rb"))["kiosk"]["divera_url"])')"
  A="$(python3 -c 'import tomllib;print(tomllib.load(open("'"$C"'","rb"))["kiosk"].get("admin_url","http://127.0.0.1:8765/"))')"
