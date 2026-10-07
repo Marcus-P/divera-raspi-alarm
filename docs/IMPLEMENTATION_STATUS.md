@@ -1,40 +1,33 @@
 # Implementation status
 
-## Implemented foundation
-- secret hygiene and example-only secret configuration
-- typed application configuration
-- local FastAPI administration service skeleton
-- minimal local admin/status/health endpoints
-- hardened systemd unit with automatic restart
-- 64-bit OS installer preflight
-- fixed PIR contract: BCM GPIO23 / physical pin 16
-- Ethernet-only architecture
+## First-installable development appliance
 
-## Safety gates still intentionally disabled
-- live DIVERA transmission until current API and recipient behavior are validated
-- real smoke/test MQTT interpretation until the purchased detector is observed
-- GPIO motion daemon until the production OS GPIO backend/session is pinned
-- kiosk wake implementation until the production compositor/session is pinned
-- Zigbee serial path until the real ZBDongle-P /dev/serial/by-id is known
-- reboot escalation until functional health checks prevent reboot loops
+The `develop` branch now has a public, token-free first-install path for a fresh Raspberry Pi OS 64-bit Desktop system.
 
-No current placeholder can generate a real fire alarm.
+Implemented for the first hardware commissioning:
+- native Mosquitto
+- Zigbee2MQTT 2.14.2 pinned with Node.js 24 and systemd watchdog
+- automatic SONOFF/CP210x stable by-id discovery and zstack configuration
+- local FastAPI administration UI and health endpoint
+- two-tab Chromium kiosk under labwc with browser respawn
+- PIR contract BCM GPIO23 / physical pin 16 and display power control
+- bounded persistent journald
+- MQTT smoke worker with deduplication and fail-closed Test-mode recipient guard
+- encrypted systemd credential storage; no persistent plaintext secret file
+- periodic functional service checks
+- install-time self-test
+- release/update architecture with rollback and non-breaking release contract
+- UI reference images under `docs/images/`
 
+## Commissioning gates
 
-## First-install progress
-- automatic ZBDongle-P/CP210x discovery via stable /dev/serial/by-id
-- hotplug discovery trigger and Zigbee2MQTT restart hook
-- Mosquitto package included in base installer
-- bounded journald configuration included
-- Zigbee2MQTT configuration template uses zstack, local MQTT, availability, frontend and console-only logging
-- public-repository bootstrap script prepared, but the current private repository still needs an authenticated/published bootstrap path before giving the user the final fresh-SD install command
+A successful software installation is not yet approval for operational fire-alarm forwarding. Test mode remains enabled.
 
-## Still required before the promised installation hand-off
-- install/pin Zigbee2MQTT itself and wire detected adapter into its generated configuration
-- implement production kiosk startup for the pinned Raspberry Pi OS compositor
-- implement GPIO23 display wake on that compositor
-- implement usable first-run UI flows (DIVERA key, personnel/test recipients, schedule, pairing)
-- implement DIVERA client with the Test-mode recipient guard
-- implement password-change privileged helper safely
-- add service functional health checks and initial recovery policies
-- finalize private-repository bootstrap strategy
+During the first real-hardware commissioning we still deliberately validate:
+- the purchased smoke detector's actual Zigbee2MQTT payload for real smoke versus detector self-test
+- the real DIVERA account's personnel/status identifiers and desired production recipient mapping
+- the DIVERA access key through encrypted credential enrollment
+- display/PIR behavior on the actual monitor
+- end-to-end test delivery to explicitly selected test recipients
+
+Production routing stays locked until those observations are complete. No guessed identifier is used to bypass these gates.
