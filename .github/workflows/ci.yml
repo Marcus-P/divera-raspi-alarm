@@ -16,5 +16,4 @@ jobs:
       - run: PYTHONPATH=app pytest -q
       - run: find installer services -type f -name '*.sh' -print0 | xargs -0 -n1 bash -n
       - name: Secret-pattern guard
-        run: |
-          ! git grep -nEi '(accesskey|token|password)[[:space:]]*=[[:space:]]*["'"''][A-Za-z0-9_-]{12,}' -- ':!docs/**' ':!tests/**'
+        run: python scripts/check_secrets.py
