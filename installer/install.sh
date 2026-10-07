@@ -9,7 +9,9 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y python3 python3-venv python3-g
 id divera-alarm >/dev/null 2>&1 || useradd --system --home "$STATE" --shell /usr/sbin/nologin divera-alarm
 install -d -m 0755 "$ETC"; install -d -o divera-alarm -g divera-alarm -m 0750 "$STATE"
 python3 -m venv --system-site-packages "$APP/venv"; "$APP/venv/bin/pip" install --no-cache-dir -r "$APP/app/requirements.txt"
-[[ -f "$ETC/config.toml" ]] || install -o root -g divera-alarm -m 0640 "$APP/config/app.example.toml" "$ETC/config.toml"
+if [[ ! -f "$STATE/config.toml" ]]; then
+ if [[ -f "$ETC/config.toml" ]]; then install -o divera-alarm -g divera-alarm -m 0640 "$ETC/config.toml" "$STATE/config.toml"; else install -o divera-alarm -g divera-alarm -m 0640 "$APP/config/app.example.toml" "$STATE/config.toml"; fi
+fi
 install -d -o root -g root -m 0700 /etc/credstore.encrypted
 rm -f "$ETC/secrets.env"
 if [[ ! -f /etc/credstore.encrypted/divera_access_key ]]; then printf "\n" | systemd-creds encrypt --name=divera_access_key - /etc/credstore.encrypted/divera_access_key; chmod 0600 /etc/credstore.encrypted/divera_access_key; fi
