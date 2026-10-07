@@ -102,13 +102,13 @@ Im Web-UI prüfen:
 
 ## 7. DIVERA-Zugang einrichten
 
-Der DIVERA Access Key darf niemals persistent im Klartext gespeichert werden. Die endgültige Eingabe erfolgt über die Administrationsoberfläche beziehungsweise den dafür vorgesehenen Credential-Helfer.
+DIVERA wird mit getrennten Zugangsdaten nach dem Prinzip der minimalen Rechte betrieben: einem Alarm-Access-Key für Alarmierungen/Mitteilungen und, sofern für die Personen-/Statusabfrage erforderlich, einem dedizierten Systemnutzer-Key. Beide dürfen niemals persistent im Klartext gespeichert werden. Die endgültige Eingabe erfolgt über die Administrationsoberfläche beziehungsweise den dafür vorgesehenen Credential-Helfer.
 
 Persistiert wird ausschließlich ein von systemd verschlüsseltes Credential unter `/etc/credstore.encrypted/`. Zur Laufzeit erhält der jeweilige Dienst den entschlüsselten Wert über sein flüchtiges systemd-Credential-Verzeichnis.
 
 Nach einem Neustart ist **keine erneute Passworteingabe** erforderlich.
 
-Der Access Key selbst gehört niemals in Git, `.env`, TOML, Shell-Skripte oder Dokumentation.
+Die Schlüssel selbst gehören niemals in Git, `.env`, TOML, Shell-Skripte oder Dokumentation.
 
 ## 8. Testmodus und Testempfänger
 
@@ -203,7 +203,7 @@ Vor Produktivbetrieb mindestens prüfen:
 
 ## 14. Updates
 
-Nach der Erstinstallation erfolgen Updates über **System → Updates** aus stabilen GitHub Releases, nicht über manuelles `git pull`.
+Nach der Erstinstallation erfolgen Updates über **System → Updates** aus stabilen, unveränderlichen GitHub Releases, nicht über manuelles `git pull`. Vor dem ersten stabilen Release muss in den Repository-Einstellungen Release-Immutability aktiviert sein.
 
 Updates müssen abwärtskompatibel sein, bestehende Daten automatisch migrieren und Rollback erlauben. Details siehe [UPDATES.md](UPDATES.md).
 
