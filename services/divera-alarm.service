@@ -8,6 +8,7 @@ User=divera-alarm
 Group=divera-alarm
 Environment=DRA_CONFIG=/var/lib/divera-raspi-alarm/config.toml
 LoadCredentialEncrypted=divera_access_key:/etc/credstore.encrypted/divera_access_key
+LoadCredentialEncrypted=divera_system_key:/etc/credstore.encrypted/divera_system_key
 WorkingDirectory=/opt/divera-raspi-alarm/current/app
 ExecStart=/opt/divera-raspi-alarm/current/venv/bin/python -m divera_alarm.worker
 Restart=always
