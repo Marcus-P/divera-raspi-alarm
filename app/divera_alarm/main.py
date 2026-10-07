@@ -79,7 +79,7 @@ def set_routing(csrf_token:str=Form(alias="csrf"),test_ids:str=Form(""),technica
 @app.get("/zigbee",response_class=HTMLResponse)
 def zigbee(_=Depends(auth)):
  c=load_settings();body=form("/zigbee/pair",f'<p>Pairing wird für {c.zigbee.permit_join_seconds} Sekunden geöffnet.</p>',"Pairing öffnen")
- return page("Rauchmelder / Zigbee",'<div class="card"><h3>SONOFF ZBDongle-P</h3><span class="badge">Automatische Erkennung</span>'+body+'</div>')
+ return page("Rauchmelder / Zigbee",'<div class="card"><h3>SONOFF ZBDongle-P</h3><span class="badge">Automatische Erkennung</span>'+body+'</div><h2>Geräte</h2>'+rows)
 @app.post("/zigbee/pair")
 def pair(csrf_token:str=Form(alias="csrf"),_=Depends(auth)):
  csrf(csrf_token);seconds=load_settings().zigbee.permit_join_seconds
@@ -91,7 +91,15 @@ def tests(_=Depends(auth)):
  c=load_settings();days=" ".join(f'<label><input name="weekdays" type="checkbox" value="{d}" {"checked" if d in c.weekly_test.weekdays else ""}> {label}</label>' for d,label in DAYS.items())
  times="".join(f'<option {"selected" if f"{h:02d}:{m:02d}"==c.weekly_test.time else ""}>{h:02d}:{m:02d}</option>' for h in range(24) for m in (0,15,30,45))
  body=form("/tests",f'<label><input type="checkbox" name="enabled" {"checked" if c.weekly_test.enabled else ""}> aktiviert</label><p>{days}</p><select name="time">{times}</select><p><label>Testempfänger-IDs <input name="recipient_ids" value="{esc(",".join(map(str,c.weekly_test.recipient_ids)))}"></label></p>')
- return page("Geplante Tests",'<div class="card"><h3>Automatischer Systemtest</h3>'+body+'<p class="muted">SYSTEMTEST – KEIN EINSATZ</p></div>')
+ manual=form("/tests/run","","Systemtest jetzt ausführen")\n return page("Geplante Tests",'<div class="card"><h3>Automatischer Systemtest</h3>'+body+'<p class="muted">SYSTEMTEST – KEIN EINSATZ</p>'+manual+'</div>')
+@app.post("/tests/run")
+def run_test(csrf_token:str=Form(alias="csrf"),_=Depends(auth)):
+ csrf(csrf_token)
+ try: devices=list(json.loads(Path("/var/lib/divera-raspi-alarm/detectors.json").read_text()))
+ except Exception: devices=[]
+ for device in devices or ["alarmweg"]:publish.single(f"divera/systemtest/{device}",payload="{}",hostname="127.0.0.1")
+ return RedirectResponse("/tests",303)
+
 @app.post("/tests")
 async def save_tests(request:Request,csrf_token:str=Form(alias="csrf"),enabled:str|None=Form(None),time:str=Form(),recipient_ids:str=Form(""),_=Depends(auth)):
  csrf(csrf_token);fd=await request.form();c=load_settings();c.weekly_test.enabled=enabled is not None;c.weekly_test.weekdays=[x for x in fd.getlist("weekdays") if x in DAYS];c.weekly_test.time=time;c.weekly_test.recipient_ids=ids(recipient_ids);save_settings(c);return RedirectResponse("/tests",303)
