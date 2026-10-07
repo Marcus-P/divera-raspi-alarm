@@ -1,34 +1,24 @@
-# Public/site configuration example. Do not put secrets here.
-
 [site]
-name = "Feuerwehr"
-timezone = "Europe/Berlin"
-
+name="Feuerwehr"
+timezone="Europe/Berlin"
 [kiosk]
-divera_url = ""
-admin_url = "http://127.0.0.1:8765/"
-display_idle_minutes = 10
-divera_first_tab = true
-admin_second_tab = true
-
+divera_url=""
+admin_url="http://127.0.0.1:8765/"
+display_idle_minutes=10
 [routing]
-test_mode = true
-# Stable DIVERA identifiers are written by the UI after personnel selection.
-test_recipient_ids = []
-production_status_ids = []
-
+test_mode=true
+test_recipient_ids=[]
+production_status_ids=[]
 [weekly_test]
-enabled = true
-weekdays = ["sunday"]
-time = "12:00"
-label = "SYSTEMTEST - KEIN EINSATZ"
-
+enabled=true
+weekdays=["sunday"]
+time="12:00"
+label="SYSTEMTEST - KEIN EINSATZ"
+recipient_ids=[]
 [monitoring]
-detector_offline_after_hours = 24
-service_recovery_attempts = 3
-
+detector_offline_after_hours=24
+service_recovery_attempts=3
 [zigbee]
-permit_join_seconds = 180
-
+permit_join_seconds=180
 [hardware]
-pir_bcm_gpio = 23
+pir_bcm_gpio=23
