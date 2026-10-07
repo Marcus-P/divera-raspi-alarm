@@ -1,5 +1,7 @@
 # Anwenderdokumentation
 
+**Dokumentationsstand: 0.1.0**
+
 Diese Anleitung beschreibt den normalen Betrieb des DIVERA Raspberry Alarm Systems. Für Installation und technische Inbetriebnahme siehe [INSTALLATION.md](INSTALLATION.md).
 
 > Das System ergänzt die lokale Alarmierung der Rauchwarnmelder. Die lokale Sirene des Rauchwarnmelders arbeitet unabhängig vom Raspberry Pi, Netzwerk und DIVERA.
