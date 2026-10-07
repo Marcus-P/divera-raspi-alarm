@@ -18,7 +18,7 @@ jobs:
           test "v$version" = "$GITHUB_REF_NAME"
           grep -Fq "Dokumentationsstand: $version" docs/ANWENDERDOKUMENTATION.md
           grep -Fq "Dokumentationsstand: $version" docs/INSTALLATION.md
-          python3 -m compileall -q app
+          python3 -m compileall -q app\n          python3 -m pip install -q -r app/requirements.txt pytest\n          PYTHONPATH=app pytest -q
           find installer services -type f -name '*.sh' -print0 | xargs -0 -n1 bash -n
       - name: Require documentation changes since previous release
         shell: bash
