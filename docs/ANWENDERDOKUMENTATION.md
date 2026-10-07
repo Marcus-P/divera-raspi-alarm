@@ -46,7 +46,7 @@ Ein gesunder Normalzustand bedeutet insbesondere:
 - Internet/DIVERA ist erreichbar
 - Kiosk läuft
 
-Ein technischer Fehler ist **kein Feueralarm**. Batterie-, Geräte- oder Verbindungsprobleme werden getrennt behandelt.
+Ein technischer Fehler ist **kein Feueralarm**. Batterie-, Geräte- oder Verbindungsprobleme werden getrennt als DIVERA-Mitteilung behandelt und nicht als Einsatzalarm.
 
 ## 4. Testmodus
 
@@ -93,7 +93,7 @@ Er prüft die elektronische Verarbeitungskette ab MQTT bis DIVERA. Er ersetzt **
 
 ## 8. Softwareupdates
 
-Unter **System → Updates** werden installierte und verfügbare stabile Versionen angezeigt.
+Unter **System → Updates** werden installierte und verfügbare stabile Versionen samt Release Notes angezeigt. Die Installation erfordert eine ausdrückliche Bestätigung.
 
 Updates stammen ausschließlich aus veröffentlichten GitHub Releases. Entwicklungsstände aus `develop` werden produktiven Geräten nicht als normales Update angeboten.
 
