@@ -7,10 +7,13 @@ ROOT=/opt/divera-raspi-alarm
 DEST="$ROOT/releases/$VERSION"
 install -d -m 0755 "$ROOT/releases"
 if [[ -d "$DEST" ]]; then
-  echo "Reusing existing staged version $VERSION after interrupted installation."
+  echo "Updating existing staged version $VERSION while retaining its virtual environment."
 else
   mkdir "$DEST"
-  cp -a "$SRC/." "$DEST/"
 fi
+# Re-running the bootstrap must deploy updated tracked files, not silently
+# re-execute stale scripts from an earlier, interrupted installation.
+# Persistent configuration and encrypted credentials live outside releases.
+cp -a "$SRC/." "$DEST/"
 ln -sfn "$DEST" "$ROOT/current.new";mv -Tf "$ROOT/current.new" "$ROOT/current"
 exec bash "$ROOT/current/installer/install.sh"
