@@ -20,6 +20,6 @@ while true; do
  mapfile -t URLS < <(get_urls)
  D="${URLS[0]:-http://127.0.0.1:8765/}"
  A="${URLS[1]:-http://127.0.0.1:8765/}"
- chromium --kiosk --noerrdialogs --disable-infobars --no-first-run --disable-session-crashed-bubble --disable-breakpad --disk-cache-size=52428800 --media-cache-size=52428800 --enable-features=OverlayScrollbar --start-maximized "$D" "$A" || true
+ chromium --kiosk --password-store=basic --no-default-browser-check --noerrdialogs --disable-infobars --no-first-run --disable-session-crashed-bubble --disable-breakpad --disk-cache-size=52428800 --media-cache-size=52428800 --enable-features=OverlayScrollbar --start-maximized "$D" "$A" || true
  sleep 3
 done
