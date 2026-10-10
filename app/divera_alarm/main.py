@@ -36,6 +36,15 @@ def page(title,body):
 
 @app.get("/health")
 def health():return {"ok":True,"component":"admin-api"}
+
+@app.get("/api/display-config")
+def display_config():
+ # Kiosk and motion monitor run under the desktop account, not divera-alarm.
+ # Only expose non-secret display settings on the loopback-bound admin service.
+ c=load_settings()
+ return {"divera_url":c.kiosk.divera_url,"admin_url":c.kiosk.admin_url,
+         "display_idle_minutes":c.kiosk.display_idle_minutes,
+         "pir_bcm_gpio":c.hardware.pir_bcm_gpio}
 @app.get("/api/status",dependencies=[Depends(auth)])
 def status():
  c=load_settings();return {"test_mode":c.routing.test_mode,"divera_key":secret_present("DIVERA_ACCESS_KEY"),"pir_gpio":23,"weekly_test":c.weekly_test.model_dump()}
