@@ -5,6 +5,7 @@ ok(){ printf 'OK   %s\n' "$1"; }
 bad(){ printf 'FAIL %s\n' "$1" >&2; fail=1; }
 [[ "$(uname -m)" == aarch64 ]] && ok "64-bit OS" || bad "64-bit OS"
 command -v chromium >/dev/null && ok "Chromium" || bad "Chromium"
+python3 -c 'import json; assert json.load(open("/etc/chromium/policies/managed/divera-kiosk.json"))["PasswordManagerEnabled"] is False' >/dev/null 2>&1 && ok "Chromium password saving disabled" || bad "Chromium password policy"
 command -v wlopm >/dev/null && ok "wlopm" || bad "wlopm"
 command -v systemd-creds >/dev/null && ok "encrypted credentials" || bad "systemd-creds"
 systemctl is-active --quiet mosquitto && ok "Mosquitto" || bad "Mosquitto"
