@@ -120,6 +120,12 @@ def post_destination(path):
 def done(path,kind="saved"):
  return RedirectResponse(f"{path}?{kind}=1",status_code=303)
 
+@app.exception_handler(RuntimeError)
+async def privileged_operation_failed(request:Request,exc:RuntimeError):
+ if request.method=="POST":
+  return RedirectResponse(post_destination(request.url.path)+"?error=1",status_code=303)
+ return HTMLResponse("<h1>Aktion fehlgeschlagen</h1><a href='/'>Zur Übersicht</a>",status_code=500)
+
 def csrf(v:str):
  if not secrets.compare_digest(v,CSRF): raise HTTPException(403,"Ungültige Formularanforderung")
 def esc(v):return html.escape(str(v),quote=True)
