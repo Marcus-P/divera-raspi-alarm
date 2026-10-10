@@ -137,6 +137,12 @@ async def invalid_form(request:Request,exc:RequestValidationError):
  from fastapi.responses import JSONResponse
  return JSONResponse({"detail":"Ungültige Anfrage"},status_code=422)
 
+@app.exception_handler(OSError)
+async def storage_operation_failed(request:Request,exc:OSError):
+ if request.method=="POST":
+  return RedirectResponse(post_destination(request.url.path)+"?error=1",status_code=303)
+ return HTMLResponse("<h1>Systemfehler</h1><a href='/'>Zur Übersicht</a>",status_code=500)
+
 @app.exception_handler(RuntimeError)
 async def privileged_operation_failed(request:Request,exc:RuntimeError):
  if request.method=="POST":
