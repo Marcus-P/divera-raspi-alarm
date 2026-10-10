@@ -25,7 +25,7 @@ install -m 0755 "$APP/installer/set-credential.sh" /usr/local/sbin/divera-set-cr
 install -m 0755 "$APP/installer/change-admin-password.sh" /usr/local/sbin/divera-change-admin-password
 install -m 0755 "$APP/installer/apply-recovery-policy.sh" /usr/local/sbin/divera-apply-recovery-policy
 install -m 0755 "$APP/installer/start-update.sh" /usr/local/sbin/divera-start-update
-install -o root -g root -m 0440 "$APP/config/divera-admin-sudoers" /etc/sudoers.d/divera-admin
+# Privileged admin operations now use the restricted control socket.
 chmod 0755 "$APP/services/divera-kiosk.sh" "$APP/services/divera-healthcheck.sh"
 install -m 0644 "$APP/services/divera-admin.service" "$APP/services/divera-alarm.service" /etc/systemd/system/
 install -m 0644 "$APP/services/divera-auth.socket" "$APP/services/divera-auth@.service" /etc/systemd/system/
