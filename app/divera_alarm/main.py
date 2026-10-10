@@ -365,8 +365,13 @@ def recovery(csrf_token:str=Form(alias="csrf"),enabled:str|None=Form(None),_=Dep
  return done("/system")
 
 @app.post("/system/update/check")
-async def update_check(csrf_token:str=Form(alias="csrf"),_=Depends(auth)):
- csrf(csrf_token);info=await latest()
+def update_check_post(csrf_token:str=Form(alias="csrf"),_=Depends(auth)):
+ csrf(csrf_token)
+ return RedirectResponse("/system/update/check",status_code=303)
+
+@app.get("/system/update/check")
+async def update_check(_=Depends(auth)):
+ info=await latest()
  if not info["newer"]:return HTMLResponse(page("Updates",'<div class="card"><h3>Aktuell</h3><p>Es ist kein neueres stabiles Release verfügbar.</p></div>'))
  body=f'<div class="card"><h3>Version {esc(info["version"])}</h3><p>Unveränderliches Release: {"ja" if info["immutable"] else "nein"}</p><pre>{esc(info["notes"])}</pre>'
  if info["immutable"]:body+=form("/system/update","",f'Version {esc(info["version"])} installieren')
@@ -380,4 +385,8 @@ async def update_system(csrf_token:str=Form(alias="csrf"),_=Depends(auth)):
  if not info["immutable"]:raise HTTPException(409,"Das neueste Release ist nicht unveränderlich und wird nicht installiert.")
  stage,digest=await download(info)
  privileged_action("start_update",stage=str(stage),version=info["version"],digest=digest)
- return HTMLResponse(page("Update gestartet",f'<div class="card"><h3>Version {esc(info["version"])}</h3><p>Das Update läuft im Hintergrund. Die Administration wird während des Dienstneustarts kurz nicht erreichbar sein. Bei fehlgeschlagenem Healthcheck erfolgt automatisch ein Rollback.</p></div>'))
+ return RedirectResponse("/system/update/started",status_code=303)
+
+@app.get("/system/update/started",response_class=HTMLResponse)
+def update_started(_=Depends(auth)):
+ return page("Update gestartet",'<div class="card"><h3>Update angestoßen</h3><p>Das Update läuft im Hintergrund. Die Administration kann während des Dienstneustarts kurz nicht erreichbar sein. Bei fehlgeschlagenem Healthcheck erfolgt automatisch ein Rollback.</p></div>')
