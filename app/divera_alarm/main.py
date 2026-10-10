@@ -1,16 +1,17 @@
-import html,json,secrets,socket,subprocess
+import html,json,secrets,socket,subprocess,time
 from pathlib import Path
 import paho.mqtt.publish as publish
 from fastapi import FastAPI,HTTPException,Depends,Form,Request
 from fastapi.responses import HTMLResponse,RedirectResponse
-from fastapi.security import HTTPBasic,HTTPBasicCredentials
 from .settings import load_settings,save_settings,secret_present
 from .divera import users
 from .updater import latest,download,installed_version
 
 app=FastAPI(title="DIVERA Raspberry Alarm",docs_url=None,redoc_url=None)
-security=HTTPBasic()
 CSRF=secrets.token_urlsafe(32)
+SESSIONS={}
+LOGIN_TOKENS={}
+SESSION_COOKIE="dra_admin_session"
 ADMIN_FILE=Path("/var/lib/divera-raspi-alarm/admin-user")
 DAYS={"monday":"Mo","tuesday":"Di","wednesday":"Mi","thursday":"Do","friday":"Fr","saturday":"Sa","sunday":"So"}
 
@@ -28,11 +29,68 @@ def verify_os_password(username:str,password:str)->bool:
    return sock.recv(32)==b"OK\n"
  except (OSError,ValueError):
   return False
-def auth(c:HTTPBasicCredentials=Depends(security)):
- user=admin_user()
- if not user or c.username!=user or not verify_os_password(c.username,c.password):
-  raise HTTPException(401,"Anmeldung fehlgeschlagen",headers={"WWW-Authenticate":"Basic realm=DIVERA-Raspberry"})
- return user
+def auth(request:Request):
+ token=request.cookies.get(SESSION_COOKIE,"")
+ now=time.monotonic()
+ expiry=SESSIONS.get(token) if token else None
+ if not expiry or expiry<=now:
+  if token:SESSIONS.pop(token,None)
+  if request.url.path.startswith("/api/"):
+   raise HTTPException(401,"Nicht angemeldet")
+  raise HTTPException(303,headers={"Location":"/login"})
+ SESSIONS[token]=now+load_settings().administration.session_idle_minutes*60
+ return admin_user()
+
+def login_page(error=""):
+ now=time.monotonic()
+ for token,expires in list(LOGIN_TOKENS.items()):
+  if expires<=now:LOGIN_TOKENS.pop(token,None)
+ if len(LOGIN_TOKENS)>128:LOGIN_TOKENS.clear()
+ token=secrets.token_urlsafe(32)
+ LOGIN_TOKENS[token]=now+300
+ message=f'<p class="warn">{esc(error)}</p>' if error else ""
+ body=(f'<div class="card"><h2>Administrator-Anmeldung</h2>{message}'
+       f'<form method="post" action="/login">'
+       f'<input type="hidden" name="csrf" value="{token}">'
+       f'<p><label>Benutzername <input name="username" autocomplete="username" required autofocus></label></p>'
+       f'<p><label>Passwort <input type="password" name="password" autocomplete="off" required></label></p>'
+       f'<button type="submit">Anmelden</button></form></div>')
+ return f'<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Anmeldung · DIVERA Raspberry Alarm</title>{CSS}<body><div class="top"><b>DIVERA Raspberry Alarm</b></div><main class="wrap">{body}</main></body></html>'
+
+@app.get("/login",response_class=HTMLResponse)
+def login_get():
+ return HTMLResponse(login_page())
+
+@app.post("/login")
+def login_post(request:Request,csrf_token:str=Form(alias="csrf"),username:str=Form(),password:str=Form()):
+ expires=LOGIN_TOKENS.pop(csrf_token,None)
+ if not expires or expires<=time.monotonic():
+  return HTMLResponse(login_page("Anmeldeformular abgelaufen. Bitte erneut versuchen."),status_code=403)
+ if username!=admin_user() or not verify_os_password(username,password):
+  return HTMLResponse(login_page("Anmeldung fehlgeschlagen."),status_code=401)
+ token=secrets.token_urlsafe(32)
+ SESSIONS[token]=time.monotonic()+load_settings().administration.session_idle_minutes*60
+ response=RedirectResponse("/",status_code=303)
+ response.set_cookie(SESSION_COOKIE,token,httponly=True,samesite="strict",secure=request.url.scheme=="https",path="/")
+ return response
+
+@app.post("/logout")
+def logout(request:Request,csrf_token:str=Form(alias="csrf")):
+ csrf(csrf_token)
+ token=request.cookies.get(SESSION_COOKIE,"")
+ if token:SESSIONS.pop(token,None)
+ response=RedirectResponse("/login",status_code=303)
+ response.delete_cookie(SESSION_COOKIE,path="/")
+ return response
+
+@app.middleware("http")
+async def security_headers(request:Request,call_next):
+ response=await call_next(request)
+ response.headers["Cache-Control"]="no-store"
+ response.headers["X-Content-Type-Options"]="nosniff"
+ response.headers["X-Frame-Options"]="DENY"
+ response.headers["Referrer-Policy"]="no-referrer"
+ return response
 def csrf(v:str):
  if not secrets.compare_digest(v,CSRF): raise HTTPException(403,"Ungültige Formularanforderung")
 def esc(v):return html.escape(str(v),quote=True)
@@ -40,11 +98,19 @@ def ids(v):return [int(x.strip()) for x in v.split(",") if x.strip().isdigit()]
 def form(action,body,button="Speichern"):
  return f'<form method="post" action="{action}"><input type="hidden" name="csrf" value="{CSRF}">{body}<p><button>{button}</button></p></form>'
 
-CSS="""<style>:root{font-family:Inter,system-ui,sans-serif;color:#18202a;background:#eef1f4}*{box-sizing:border-box}body{margin:0}.top{background:#18202a;color:white;padding:18px 28px}.wrap{max-width:1180px;margin:auto;padding:24px}.test{background:#f7c948;color:#3d2c00;padding:12px 18px;font-weight:800}.nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px}.nav a{background:white;padding:10px 13px;border-radius:9px;text-decoration:none;color:#18202a}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.card{background:white;border-radius:12px;padding:18px;box-shadow:0 1px 3px #0001;margin-bottom:14px}.ok{color:#18794e}.warn{color:#a15c00}.muted{color:#68737d}.badge{display:inline-block;border-radius:99px;padding:4px 9px;background:#e7f5ed;color:#18794e;font-weight:700}button,select,input{font:inherit;padding:9px;border:1px solid #ccd3da;border-radius:7px}button{background:#243b53;color:white;border:0}label{display:inline-block;margin:6px}h1,h2,h3{margin-top:0}</style>"""
-NAV='<div class="nav"><a href="/">Übersicht</a><a href="/divera">DIVERA & Routing</a><a href="/zigbee">Rauchmelder</a><a href="/tests">Geplante Tests</a><a href="/display">Anzeige</a><a href="/system">System</a></div>'
+CSS="""<style>:root{font-family:Inter,system-ui,sans-serif;color:#18202a;background:#eef1f4}*{box-sizing:border-box}body{margin:0}.top{background:#18202a;color:white;padding:18px 28px}.wrap{max-width:1180px;margin:auto;padding:24px}.test{background:#f7c948;color:#3d2c00;padding:12px 18px;font-weight:800}.nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px}.nav a{background:white;padding:10px 13px;border-radius:9px;text-decoration:none;color:#18202a}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.card{background:white;border-radius:12px;padding:18px;box-shadow:0 1px 3px #0001;margin-bottom:14px}.ok{color:#18794e}.warn{color:#a15c00}.muted{color:#68737d}.badge{display:inline-block;border-radius:99px;padding:4px 9px;background:#e7f5ed;color:#18794e;font-weight:700}button,select,input{font:inherit;padding:9px;border:1px solid #ccd3da;border-radius:7px}button{background:#243b53;color:white;border:0}label{display:inline-block;margin:6px}h1,h2,h3{margin-top:0}.nav form,.nav form p{margin:0}.nav button{padding:10px 13px}</style>"""
+NAV='<div class="nav"><a href="/">Übersicht</a><a href="/divera">DIVERA & Routing</a><a href="/zigbee">Rauchmelder</a><a href="/tests">Geplante Tests</a><a href="/display">Anzeige</a><a href="/system">System</a>'+form("/logout","","Abmelden")+'</div>'
 def page(title,body):
  c=load_settings();b='<div class="test">TESTMODUS AKTIV · Alarme ausschließlich an ausgewählte Testempfänger</div>' if c.routing.test_mode else ''
- return f'<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>{esc(title)}</title>{CSS}<body><div class="top"><b>DIVERA Raspberry Alarm</b> · {esc(c.site.name)}</div>{b}<main class="wrap">{NAV}<h1>{esc(title)}</h1>{body}</main></body></html>'
+ # Client hides the page after inactivity; the server enforces expiry too.
+ script=('<script>const idleMs='+str(c.administration.session_idle_minutes*60000)
+         +';const csrf='+json.dumps(CSRF)
+         +''';let idleTimer;
+ function logOut(){fetch("/logout",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"csrf="+encodeURIComponent(csrf)}).finally(()=>location.replace("/login"));}
+ function resetIdle(){clearTimeout(idleTimer);idleTimer=setTimeout(logOut,idleMs);}
+ for(const eventName of ["pointermove","pointerdown","keydown","touchstart","scroll"])document.addEventListener(eventName,resetIdle,{passive:true});
+ resetIdle();</script>''')
+ return f'<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>{esc(title)}</title>{CSS}<body><div class="top"><b>DIVERA Raspberry Alarm</b> · {esc(c.site.name)}</div>{b}<main class="wrap">{NAV}<h1>{esc(title)}</h1>{body}</main>{script}</body></html>'
 
 @app.get("/health")
 def health():return {"ok":True,"component":"admin-api"}
