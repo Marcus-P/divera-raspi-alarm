@@ -35,7 +35,11 @@ install -d /etc/systemd/journald.conf.d; install -m 0644 "$APP/config/journald-d
 bash "$APP/installer/install-zigbee2mqtt.sh"
 bash "$APP/installer/install-kiosk.sh" "${SUDO_USER:-}"
 udevadm control --reload; systemctl daemon-reload; systemctl restart systemd-journald mosquitto
-systemctl enable --now mosquitto divera-admin.service divera-alarm.service divera-healthcheck.timer
+systemctl enable --now mosquitto divera-healthcheck.timer
+systemctl enable divera-admin.service divera-alarm.service
+# On an upgrade, --now alone does not restart already running services;
+# restart both processes so they load the freshly deployed application code.
+systemctl restart divera-admin.service divera-alarm.service
 /usr/local/sbin/divera-detect-zbdongle || true
 systemctl enable zigbee2mqtt.service
 if [[ -s /etc/divera-raspi-alarm/zigbee-adapter.env ]] && grep -q "^ZIGBEE_ADAPTER=/dev/" /etc/divera-raspi-alarm/zigbee-adapter.env; then
