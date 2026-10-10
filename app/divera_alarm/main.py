@@ -117,6 +117,7 @@ def form(action,body,button="Speichern"):
  return f'<form method="post" action="{action}"><input type="hidden" name="csrf" value="{CSRF}">{body}<p><button>{button}</button></p></form>'
 
 CSS="""<style>:root{font-family:Inter,system-ui,sans-serif;color:#18202a;background:#eef1f4}*{box-sizing:border-box}body{margin:0}.top{background:#18202a;color:white;padding:18px 28px}.wrap{max-width:1180px;margin:auto;padding:24px}.test{background:#f7c948;color:#3d2c00;padding:12px 18px;font-weight:800}.nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px}.nav a{background:white;padding:10px 13px;border-radius:9px;text-decoration:none;color:#18202a}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.card{background:white;border-radius:12px;padding:18px;box-shadow:0 1px 3px #0001;margin-bottom:14px}.ok{color:#18794e}.warn{color:#a15c00}.muted{color:#68737d}.badge{display:inline-block;border-radius:99px;padding:4px 9px;background:#e7f5ed;color:#18794e;font-weight:700}button,select,input{font:inherit;padding:9px;border:1px solid #ccd3da;border-radius:7px}button{background:#243b53;color:white;border:0}label{display:inline-block;margin:6px}h1,h2,h3{margin-top:0}.nav form,.nav form p{margin:0}.nav button{padding:10px 13px}.login-page{min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#e7eef5 0%,#f4f6f9 65%);display:flex;flex-direction:column}.login-header{display:flex;align-items:center;gap:12px;padding:24px clamp(20px,4vw,56px);color:#243b53}.login-header b{font-size:20px;letter-spacing:.06em}.login-header span{border-left:1px solid #bac7d4;padding-left:12px;color:#607181;font-size:14px}.login-main{flex:1;display:flex;align-items:center;justify-content:center;padding:24px 18px 10vh}.login-card{width:100%;max-width:420px;background:#fff;padding:38px;border:1px solid #e2e8f0;border-radius:18px;box-shadow:0 18px 48px #1c344814}.login-mark{width:48px;height:48px;border-radius:13px;background:#243b53;color:#fff;display:grid;place-items:center;font-weight:800;letter-spacing:.04em;margin-bottom:25px}.login-card h1{font-size:26px;letter-spacing:-.035em;margin:0 0 9px}.login-subtitle{font-size:14px;line-height:1.55;color:#66788a;margin:0 0 30px}.login-form{display:flex;flex-direction:column;gap:0}.login-form label{display:block;margin:0 0 7px;font-size:13px;font-weight:650;color:#34485b}.login-form input{display:block;width:100%;height:45px;margin:0 0 19px;border:1px solid #cbd5df;border-radius:9px;padding:0 13px;background:#fff;color:#18202a}.login-form input:focus{outline:2px solid #89a6c6;outline-offset:1px;border-color:#5b7da1}.login-form button{height:46px;width:100%;margin-top:6px;border-radius:9px;font-weight:700;cursor:pointer}.login-form button:hover{background:#304d6c}.login-footnote{margin:24px 0 0;text-align:center;font-size:12px;color:#84919d}@media(max-width:480px){.login-card{padding:28px 22px}.login-main{align-items:flex-start;padding-top:48px}}
+button{cursor:pointer;transition:background-color .15s ease,transform .1s ease,opacity .15s ease,box-shadow .15s ease}button:hover:not(:disabled){background:#365774;box-shadow:0 2px 8px #1c34481f}button:active:not(:disabled){transform:scale(.97);background:#172d43}button:focus-visible{outline:3px solid #86a7c8;outline-offset:2px}button:disabled{cursor:wait;opacity:.78}.button-spinner{display:inline-block;width:13px;height:13px;border:2px solid #ffffff66;border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:7px}@keyframes spin{to{transform:rotate(360deg)}}.ui-toast{position:fixed;bottom:26px;right:26px;z-index:1000;max-width:min(420px,calc(100vw - 36px));padding:13px 18px;background:#173d2d;color:#fff;border-radius:11px;box-shadow:0 9px 30px #18202a40;font-weight:600;animation:toast-in .2s ease}.ui-toast.error{background:#853334}@keyframes toast-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@media(prefers-reduced-motion:reduce){button,.ui-toast{animation:none;transition:none}}
 </style>"""
 NAV='<div class="nav"><a href="/">Übersicht</a><a href="/divera">DIVERA & Routing</a><a href="/zigbee">Rauchmelder</a><a href="/tests">Geplante Tests</a><a href="/display">Anzeige</a><a href="/system">System</a>'+form("/logout","","Abmelden")+'</div>'
 def page(title,body):
@@ -139,6 +140,25 @@ def page(title,body):
   if(now-lastPing>30000){lastPing=now;void checkSession();}
  }
  for(const eventName of ["pointermove","pointerdown","keydown","touchstart","scroll"])document.addEventListener(eventName,resetIdle,{passive:true});
+ document.querySelectorAll('form[method="post"]').forEach(form=>{
+  form.addEventListener("submit",()=>{
+   const button=form.querySelector('button[type="submit"],button:not([type])');
+   if(!button||button.disabled)return;
+   button.disabled=true;
+   button.innerHTML='<span class="button-spinner" aria-hidden="true"></span>Bitte warten …';
+   button.setAttribute("aria-busy","true");
+  });
+ });
+ const params=new URLSearchParams(location.search);
+ if(params.has("saved")||params.has("sent")||params.has("error")){
+  const toast=document.createElement("div");
+  toast.className="ui-toast"+(params.has("error")?" error":"");
+  toast.setAttribute("role",params.has("error")?"alert":"status");
+  toast.textContent=params.has("error")?"Aktion fehlgeschlagen. Die Änderung wurde nicht vollständig übernommen.":params.has("sent")?"Anfrage wurde gesendet.":"Änderungen gespeichert.";
+  document.body.appendChild(toast);
+  history.replaceState(null,"",location.pathname);
+  if(!params.has("error"))setTimeout(()=>toast.remove(),3500);
+ }
  resetIdle();</script>''')
  return f'<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>{esc(title)}</title>{CSS}<body><div class="top"><b>DIVERA Raspberry Alarm</b> · {esc(c.site.name)}</div>{b}<main class="wrap">{NAV}<h1>{esc(title)}</h1>{body}</main>{script}</body></html>'
 
