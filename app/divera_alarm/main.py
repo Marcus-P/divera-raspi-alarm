@@ -240,8 +240,17 @@ def save_display(csrf_token:str=Form(alias="csrf"),url:str=Form(""),idle:int=For
 def system(_=Depends(auth)):
  c=load_settings(); recovery=form("/system/recovery",f'<label><input type="checkbox" name="enabled" {"checked" if c.monitoring.reboot_escalation_enabled else ""}> Reboot-Eskalation und Hardware-Watchdog nach Inbetriebnahme aktivieren</label>',"Wiederherstellungsrichtlinie speichern")
  p=form("/system/password",'<label>Aktuelles Passwort <input type="password" name="current" required></label><br><label>Neues Passwort <input type="password" name="new" minlength="10" required></label><br><label>Wiederholen <input type="password" name="confirm" minlength="10" required></label>',"Passwort ändern")
+ session_form=form("/system/session",f'<label>Automatisch abmelden nach <input type="number" min="1" max="240" name="minutes" value="{c.administration.session_idle_minutes}" required> Minuten ohne Bedienung</label>',"Zeitlimit speichern")
  update=form("/system/update/check",'<p>Installierte Version: '+esc(installed_version())+'</p>',"Nach stabilem Update suchen")
- return page("System / Administration",'<div class="grid"><div class="card"><h3>Dienste</h3><p>Mosquitto · Zigbee2MQTT · Alarmdienst · Kiosk</p></div><div class="card"><h3>Wiederherstellung</h3><p>Healthchecks und gezielte Neustarts.</p>'+recovery+'</div></div><div class="card"><h3>Administrator-Passwort</h3>'+p+'</div><div class="card"><h3>Updates</h3>'+update+'<p class="muted">Nur unveränderliche stabile GitHub Releases mit SHA-256-Digest werden akzeptiert.</p></div>')
+ return page("System / Administration",'<div class="grid"><div class="card"><h3>Dienste</h3><p>Mosquitto · Zigbee2MQTT · Alarmdienst · Kiosk</p></div><div class="card"><h3>Wiederherstellung</h3><p>Healthchecks und gezielte Neustarts.</p>'+recovery+'</div></div><div class="card"><h3>Administrator-Sitzung</h3>'+session_form+'</div><div class="card"><h3>Administrator-Passwort</h3>'+p+'</div><div class="card"><h3>Updates</h3>'+update+'<p class="muted">Nur unveränderliche stabile GitHub Releases mit SHA-256-Digest werden akzeptiert.</p></div>')
+@app.post("/system/session")
+def save_session_timeout(csrf_token:str=Form(alias="csrf"),minutes:int=Form(),_=Depends(auth)):
+ csrf(csrf_token)
+ c=load_settings()
+ c.administration.session_idle_minutes=max(1,min(240,minutes))
+ save_settings(c)
+ return RedirectResponse("/system",303)
+
 @app.post("/system/password")
 def password(csrf_token:str=Form(alias="csrf"),current:str=Form(),new:str=Form(),confirm:str=Form(),user=Depends(auth)):
  csrf(csrf_token)
