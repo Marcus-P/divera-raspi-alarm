@@ -1,6 +1,5 @@
-import html,json,secrets,subprocess
+import html,json,secrets,socket,subprocess
 from pathlib import Path
-import pam
 import paho.mqtt.publish as publish
 from fastapi import FastAPI,HTTPException,Depends,Form,Request
 from fastapi.responses import HTMLResponse,RedirectResponse
@@ -16,9 +15,22 @@ ADMIN_FILE=Path("/var/lib/divera-raspi-alarm/admin-user")
 DAYS={"monday":"Mo","tuesday":"Di","wednesday":"Mi","thursday":"Do","friday":"Fr","saturday":"Sa","sunday":"So"}
 
 def admin_user(): return ADMIN_FILE.read_text().strip() if ADMIN_FILE.exists() else ""
+def verify_os_password(username:str,password:str)->bool:
+ # The web process is intentionally unprivileged. PAM needs access to
+ # /etc/shadow, so a tightly scoped root-owned UNIX socket handles verification.
+ if not password or len(password)>1024:return False
+ try:
+  with socket.socket(socket.AF_UNIX,socket.SOCK_STREAM) as sock:
+   sock.settimeout(5)
+   sock.connect("/run/divera-raspi-alarm/auth.sock")
+   sock.sendall(json.dumps({"username":username,"password":password}).encode("utf-8")+b"\n")
+   sock.shutdown(socket.SHUT_WR)
+   return sock.recv(32)==b"OK\n"
+ except (OSError,ValueError):
+  return False
 def auth(c:HTTPBasicCredentials=Depends(security)):
  user=admin_user()
- if not user or c.username!=user or not pam.pam().authenticate(c.username,c.password):
+ if not user or c.username!=user or not verify_os_password(c.username,c.password):
   raise HTTPException(401,"Anmeldung fehlgeschlagen",headers={"WWW-Authenticate":"Basic realm=DIVERA-Raspberry"})
  return user
 def csrf(v:str):
@@ -140,7 +152,7 @@ def system(_=Depends(auth)):
 @app.post("/system/password")
 def password(csrf_token:str=Form(alias="csrf"),current:str=Form(),new:str=Form(),confirm:str=Form(),user=Depends(auth)):
  csrf(csrf_token)
- if not pam.pam().authenticate(user,current):raise HTTPException(403,"Aktuelles Passwort ist falsch")
+ if not verify_os_password(user,current):raise HTTPException(403,"Aktuelles Passwort ist falsch")
  if new!=confirm or len(new)<10:raise HTTPException(400,"Neue Passwörter stimmen nicht überein oder sind zu kurz")
  subprocess.run(["sudo","/usr/local/sbin/divera-change-admin-password",user],input=new+"\n",text=True,check=True)
  return RedirectResponse("/system",303)
