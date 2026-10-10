@@ -28,6 +28,7 @@ install -m 0755 "$APP/installer/start-update.sh" /usr/local/sbin/divera-start-up
 install -o root -g root -m 0440 "$APP/config/divera-admin-sudoers" /etc/sudoers.d/divera-admin
 chmod 0755 "$APP/services/divera-kiosk.sh" "$APP/services/divera-healthcheck.sh"
 install -m 0644 "$APP/services/divera-admin.service" "$APP/services/divera-alarm.service" /etc/systemd/system/
+install -m 0644 "$APP/services/divera-auth.socket" "$APP/services/divera-auth@.service" /etc/systemd/system/
 install -m 0644 "$APP/services/divera-zigbee-detect.service" /etc/systemd/system/
 install -m 0644 "$APP/services/divera-healthcheck.service" "$APP/services/divera-healthcheck.timer" "$APP/services/divera-technical-notify@.service" /etc/systemd/system/
 install -m 0644 "$APP/services/99-divera-zbdongle.rules" /etc/udev/rules.d/
@@ -36,6 +37,7 @@ bash "$APP/installer/install-zigbee2mqtt.sh"
 bash "$APP/installer/install-kiosk.sh" "${SUDO_USER:-}"
 udevadm control --reload; systemctl daemon-reload; systemctl restart systemd-journald mosquitto
 systemctl enable --now mosquitto divera-healthcheck.timer
+systemctl enable --now divera-auth.socket
 systemctl enable divera-admin.service divera-alarm.service
 # On an upgrade, --now alone does not restart already running services;
 # restart both processes so they load the freshly deployed application code.
