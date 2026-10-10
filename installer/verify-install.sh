@@ -33,7 +33,7 @@ for attempt in 1 2 3 4 5 6 7 8 9 10; do
 done
 [[ "$admin_ready" == true ]] && ok "Admin UI + display settings" || bad "Admin UI + display settings"
 if [[ "$(curl -sS -o /dev/null -w '%{http_code}' --max-time 3 http://127.0.0.1:8765/)" == "303" ]] && \
-   curl -fsS --max-time 3 http://127.0.0.1:8765/login | grep -q 'Administrator-Anmeldung'; then
+   curl -fsS --max-time 3 http://127.0.0.1:8765/login | grep -q 'login-form'; then
  ok "Admin login required"
 else
  bad "Admin login required"
