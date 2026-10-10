@@ -16,7 +16,7 @@ def main():
     result = False
     try:
         line = sys.stdin.buffer.readline(4097)
-        if not line.endswith(b"\\n") or len(line) > 4096:
+        if not line.endswith(b"\n") or len(line) > 4096:
             raise ValueError("Invalid request length")
         request = json.loads(line)
         username = request.get("username")
@@ -28,7 +28,7 @@ def main():
             result = bool(pam.pam().authenticate(username, password, service="login"))
     except Exception:
         pass  # Fail closed, without printing secrets or PAM details.
-    sys.stdout.write("OK\\n" if result else "DENIED\\n")
+    sys.stdout.write("OK\n" if result else "DENIED\n")
     sys.stdout.flush()
 
 if __name__ == "__main__":
