@@ -1,0 +1,21 @@
+[Unit]
+Description=DIVERA isolated PAM authentication request
+After=systemd-user-sessions.service
+
+[Service]
+Type=exec
+User=root
+Group=root
+ExecStart=/opt/divera-raspi-alarm/current/venv/bin/python /opt/divera-raspi-alarm/current/services/divera-auth-verify.py
+StandardInput=socket
+StandardOutput=inherit
+StandardError=journal
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX
+TimeoutStartSec=10
