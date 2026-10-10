@@ -49,13 +49,18 @@ def login_page(error=""):
  token=secrets.token_urlsafe(32)
  LOGIN_TOKENS[token]=now+300
  message=f'<p class="warn">{esc(error)}</p>' if error else ""
- body=(f'<div class="card"><h2>Administrator-Anmeldung</h2>{message}'
-       f'<form method="post" action="/login">'
+ body=(f'<section class="login-card"><div class="login-mark">DR</div>'
+       f'<h1>Willkommen zurück</h1>'
+       f'<p class="login-subtitle">Melde dich an, um die Alarmanlage zu verwalten.</p>{message}'
+       f'<form method="post" action="/login" class="login-form">'
        f'<input type="hidden" name="csrf" value="{token}">'
-       f'<p><label>Benutzername <input name="username" autocomplete="username" required autofocus></label></p>'
-       f'<p><label>Passwort <input type="password" name="password" autocomplete="off" required></label></p>'
-       f'<button type="submit">Anmelden</button></form></div>')
- return f'<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Anmeldung · DIVERA Raspberry Alarm</title>{CSS}<body><div class="top"><b>DIVERA Raspberry Alarm</b></div><main class="wrap">{body}</main></body></html>'
+       f'<label for="login-user">Benutzername</label>'
+       f'<input id="login-user" name="username" autocomplete="username" required autofocus>'
+       f'<label for="login-password">Passwort</label>'
+       f'<input id="login-password" type="password" name="password" autocomplete="off" required>'
+       f'<button type="submit">Anmelden</button></form>'
+       f'<p class="login-footnote">Geschützter Administrationsbereich</p></section>')
+ return f'<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Anmeldung · DIVERA Raspberry Alarm</title>{CSS}<body class="login-page"><header class="login-header"><b>DIVERA</b><span>Raspberry Alarm</span></header><main class="login-main">{body}</main></body></html>'
 
 @app.get("/login",response_class=HTMLResponse)
 def login_get():
@@ -98,7 +103,8 @@ def ids(v):return [int(x.strip()) for x in v.split(",") if x.strip().isdigit()]
 def form(action,body,button="Speichern"):
  return f'<form method="post" action="{action}"><input type="hidden" name="csrf" value="{CSRF}">{body}<p><button>{button}</button></p></form>'
 
-CSS="""<style>:root{font-family:Inter,system-ui,sans-serif;color:#18202a;background:#eef1f4}*{box-sizing:border-box}body{margin:0}.top{background:#18202a;color:white;padding:18px 28px}.wrap{max-width:1180px;margin:auto;padding:24px}.test{background:#f7c948;color:#3d2c00;padding:12px 18px;font-weight:800}.nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px}.nav a{background:white;padding:10px 13px;border-radius:9px;text-decoration:none;color:#18202a}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.card{background:white;border-radius:12px;padding:18px;box-shadow:0 1px 3px #0001;margin-bottom:14px}.ok{color:#18794e}.warn{color:#a15c00}.muted{color:#68737d}.badge{display:inline-block;border-radius:99px;padding:4px 9px;background:#e7f5ed;color:#18794e;font-weight:700}button,select,input{font:inherit;padding:9px;border:1px solid #ccd3da;border-radius:7px}button{background:#243b53;color:white;border:0}label{display:inline-block;margin:6px}h1,h2,h3{margin-top:0}.nav form,.nav form p{margin:0}.nav button{padding:10px 13px}</style>"""
+CSS="""<style>:root{font-family:Inter,system-ui,sans-serif;color:#18202a;background:#eef1f4}*{box-sizing:border-box}body{margin:0}.top{background:#18202a;color:white;padding:18px 28px}.wrap{max-width:1180px;margin:auto;padding:24px}.test{background:#f7c948;color:#3d2c00;padding:12px 18px;font-weight:800}.nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px}.nav a{background:white;padding:10px 13px;border-radius:9px;text-decoration:none;color:#18202a}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.card{background:white;border-radius:12px;padding:18px;box-shadow:0 1px 3px #0001;margin-bottom:14px}.ok{color:#18794e}.warn{color:#a15c00}.muted{color:#68737d}.badge{display:inline-block;border-radius:99px;padding:4px 9px;background:#e7f5ed;color:#18794e;font-weight:700}button,select,input{font:inherit;padding:9px;border:1px solid #ccd3da;border-radius:7px}button{background:#243b53;color:white;border:0}label{display:inline-block;margin:6px}h1,h2,h3{margin-top:0}.nav form,.nav form p{margin:0}.nav button{padding:10px 13px}.login-page{min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#e7eef5 0%,#f4f6f9 65%);display:flex;flex-direction:column}.login-header{display:flex;align-items:center;gap:12px;padding:24px clamp(20px,4vw,56px);color:#243b53}.login-header b{font-size:20px;letter-spacing:.06em}.login-header span{border-left:1px solid #bac7d4;padding-left:12px;color:#607181;font-size:14px}.login-main{flex:1;display:flex;align-items:center;justify-content:center;padding:24px 18px 10vh}.login-card{width:100%;max-width:420px;background:#fff;padding:38px;border:1px solid #e2e8f0;border-radius:18px;box-shadow:0 18px 48px #1c344814}.login-mark{width:48px;height:48px;border-radius:13px;background:#243b53;color:#fff;display:grid;place-items:center;font-weight:800;letter-spacing:.04em;margin-bottom:25px}.login-card h1{font-size:26px;letter-spacing:-.035em;margin:0 0 9px}.login-subtitle{font-size:14px;line-height:1.55;color:#66788a;margin:0 0 30px}.login-form{display:flex;flex-direction:column;gap:0}.login-form label{display:block;margin:0 0 7px;font-size:13px;font-weight:650;color:#34485b}.login-form input{display:block;width:100%;height:45px;margin:0 0 19px;border:1px solid #cbd5df;border-radius:9px;padding:0 13px;background:#fff;color:#18202a}.login-form input:focus{outline:2px solid #89a6c6;outline-offset:1px;border-color:#5b7da1}.login-form button{height:46px;width:100%;margin-top:6px;border-radius:9px;font-weight:700;cursor:pointer}.login-form button:hover{background:#304d6c}.login-footnote{margin:24px 0 0;text-align:center;font-size:12px;color:#84919d}@media(max-width:480px){.login-card{padding:28px 22px}.login-main{align-items:flex-start;padding-top:48px}}
+</style>"""
 NAV='<div class="nav"><a href="/">Übersicht</a><a href="/divera">DIVERA & Routing</a><a href="/zigbee">Rauchmelder</a><a href="/tests">Geplante Tests</a><a href="/display">Anzeige</a><a href="/system">System</a>'+form("/logout","","Abmelden")+'</div>'
 def page(title,body):
  c=load_settings();b='<div class="test">TESTMODUS AKTIV · Alarme ausschließlich an ausgewählte Testempfänger</div>' if c.routing.test_mode else ''
