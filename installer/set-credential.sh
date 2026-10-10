@@ -9,4 +9,6 @@ IFS= read -r SECRET
 printf '%s' "$SECRET" | systemd-creds encrypt --name="$NAME" - "/etc/credstore.encrypted/$NAME"
 unset SECRET
 chmod 0600 "/etc/credstore.encrypted/$NAME"
-systemctl try-restart divera-admin.service divera-alarm.service || true
+# Delay the web service restart so its HTTP response can complete.
+systemctl try-restart divera-alarm.service
+systemd-run --quiet --collect --unit="divera-admin-refresh-$(date +%s%N)" --on-active=5s /usr/bin/systemctl try-restart divera-admin.service
