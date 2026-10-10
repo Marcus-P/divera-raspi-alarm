@@ -1,0 +1,14 @@
+[Unit]
+Description=DIVERA privileged control socket
+
+[Socket]
+ListenStream=/run/divera-raspi-alarm/control.sock
+SocketUser=root
+SocketGroup=divera-alarm
+SocketMode=0660
+DirectoryMode=0755
+RemoveOnStop=true
+Accept=yes
+
+[Install]
+WantedBy=sockets.target
