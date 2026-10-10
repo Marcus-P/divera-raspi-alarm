@@ -246,19 +246,19 @@ def set_key(csrf_token:str=Form(alias="csrf"),key:str=Form(),_=Depends(auth)):
  csrf(csrf_token)
  if len(key.strip())<4:raise HTTPException(400,"Access-Key ist leer/zu kurz")
  privileged_action("set_credential",name="divera_access_key",value=key.strip())
- return RedirectResponse("/divera",303)
+ return done("/divera")
 
 @app.post("/divera/system-key")
 def set_system_key(csrf_token:str=Form(alias="csrf"),key:str=Form(),_=Depends(auth)):
  csrf(csrf_token)
  if len(key.strip())<4:raise HTTPException(400,"Systemnutzer-Key ist leer/zu kurz")
  privileged_action("set_credential",name="divera_system_key",value=key.strip())
- return RedirectResponse("/divera",303)
+ return done("/divera")
 
 @app.post("/divera/routing")
 def set_routing(csrf_token:str=Form(alias="csrf"),test_ids:str=Form(""),technical_ids:str=Form(""),_=Depends(auth)):
  csrf(csrf_token);c=load_settings();c.routing.test_recipient_ids=ids(test_ids);c.routing.technical_recipient_ids=ids(technical_ids);save_settings(c)
- return RedirectResponse("/divera",303)
+ return done("/divera")
 
 @app.get("/zigbee",response_class=HTMLResponse)
 def zigbee(_=Depends(auth)):
@@ -273,7 +273,7 @@ def zigbee(_=Depends(auth)):
 def pair(csrf_token:str=Form(alias="csrf"),_=Depends(auth)):
  csrf(csrf_token);seconds=load_settings().zigbee.permit_join_seconds
  publish.single("zigbee2mqtt/bridge/request/permit_join",payload=json.dumps({"time":seconds}),hostname="127.0.0.1")
- return RedirectResponse("/zigbee",303)
+ return done("/zigbee","sent")
 
 @app.get("/tests",response_class=HTMLResponse)
 def tests(_=Depends(auth)):
@@ -290,13 +290,13 @@ def run_test(csrf_token:str=Form(alias="csrf"),_=Depends(auth)):
  try:devices=list(json.loads(Path("/var/lib/divera-raspi-alarm/detectors.json").read_text()))
  except Exception:devices=[]
  for device in devices or ["alarmweg"]:publish.single(f"divera/systemtest/{device}",payload="{}",hostname="127.0.0.1")
- return RedirectResponse("/tests",303)
+ return done("/tests","sent")
 
 @app.post("/tests")
 async def save_tests(request:Request,csrf_token:str=Form(alias="csrf"),enabled:str|None=Form(None),time:str=Form(),recipient_ids:str=Form(""),_=Depends(auth)):
  csrf(csrf_token);fd=await request.form();c=load_settings()
  c.weekly_test.enabled=enabled is not None;c.weekly_test.weekdays=[x for x in fd.getlist("weekdays") if x in DAYS];c.weekly_test.time=time;c.weekly_test.recipient_ids=ids(recipient_ids);save_settings(c)
- return RedirectResponse("/tests",303)
+ return done("/tests","sent")
 
 @app.get("/display",response_class=HTMLResponse)
 def display(_=Depends(auth)):
@@ -304,7 +304,7 @@ def display(_=Depends(auth)):
  return page("Anzeige / Kiosk",'<div class="card"><h3>Kiosk</h3>'+body+'<p>PIR: BCM GPIO23 / Pin 16</p></div>')
 @app.post("/display")
 def save_display(csrf_token:str=Form(alias="csrf"),url:str=Form(""),idle:int=Form(),_=Depends(auth)):
- csrf(csrf_token);c=load_settings();c.kiosk.divera_url=url.strip();c.kiosk.display_idle_minutes=max(1,min(240,idle));save_settings(c);return RedirectResponse("/display",303)
+ csrf(csrf_token);c=load_settings();c.kiosk.divera_url=url.strip();c.kiosk.display_idle_minutes=max(1,min(240,idle));save_settings(c);return done("/display")
 
 @app.get("/system",response_class=HTMLResponse)
 def system(_=Depends(auth)):
@@ -319,7 +319,7 @@ def save_session_timeout(csrf_token:str=Form(alias="csrf"),minutes:int=Form(),_=
  c=load_settings()
  c.administration.session_idle_minutes=max(1,min(240,minutes))
  save_settings(c)
- return RedirectResponse("/system",303)
+ return done("/system")
 
 @app.post("/system/password")
 def password(csrf_token:str=Form(alias="csrf"),current:str=Form(),new:str=Form(),confirm:str=Form(),user=Depends(auth)):
@@ -327,13 +327,23 @@ def password(csrf_token:str=Form(alias="csrf"),current:str=Form(),new:str=Form()
  if not verify_os_password(user,current):raise HTTPException(403,"Aktuelles Passwort ist falsch")
  if new!=confirm or len(new)<10:raise HTTPException(400,"Neue Passwörter stimmen nicht überein oder sind zu kurz")
  privileged_action("change_password",username=user,password=new)
- return RedirectResponse("/system",303)
+ SESSIONS.clear()
+ return RedirectResponse("/login",status_code=303)
 
 @app.post("/system/recovery")
 def recovery(csrf_token:str=Form(alias="csrf"),enabled:str|None=Form(None),_=Depends(auth)):
- csrf(csrf_token);c=load_settings();c.monitoring.reboot_escalation_enabled=enabled is not None;save_settings(c)
- privileged_action("recovery")
- return RedirectResponse("/system",303)
+ csrf(csrf_token)
+ c=load_settings()
+ previous=c.monitoring.reboot_escalation_enabled
+ c.monitoring.reboot_escalation_enabled=enabled is not None
+ save_settings(c)
+ try:
+  privileged_action("recovery")
+ except RuntimeError:
+  c.monitoring.reboot_escalation_enabled=previous
+  save_settings(c)
+  raise
+ return done("/system")
 
 @app.post("/system/update/check")
 async def update_check(csrf_token:str=Form(alias="csrf"),_=Depends(auth)):
@@ -347,7 +357,7 @@ async def update_check(csrf_token:str=Form(alias="csrf"),_=Depends(auth)):
 @app.post("/system/update")
 async def update_system(csrf_token:str=Form(alias="csrf"),_=Depends(auth)):
  csrf(csrf_token);info=await latest()
- if not info["newer"]:return RedirectResponse("/system",303)
+ if not info["newer"]:return done("/system")
  if not info["immutable"]:raise HTTPException(409,"Das neueste Release ist nicht unveränderlich und wird nicht installiert.")
  stage,digest=await download(info)
  privileged_action("start_update",stage=str(stage),version=info["version"],digest=digest)
