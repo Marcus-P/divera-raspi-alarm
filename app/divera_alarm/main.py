@@ -2,6 +2,7 @@ import html,json,secrets,socket,subprocess,time
 from pathlib import Path
 import paho.mqtt.publish as publish
 from fastapi import FastAPI,HTTPException,Depends,Form,Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse,RedirectResponse
 from .settings import load_settings,save_settings,secret_present
 from .divera import users
@@ -128,6 +129,13 @@ async def form_http_error(request:Request,exc:HTTPException):
   return RedirectResponse(post_destination(request.url.path)+"?error=1",status_code=303)
  from fastapi.responses import JSONResponse
  return JSONResponse({"detail":exc.detail},status_code=exc.status_code,headers=exc.headers)
+
+@app.exception_handler(RequestValidationError)
+async def invalid_form(request:Request,exc:RequestValidationError):
+ if request.method=="POST":
+  return RedirectResponse(post_destination(request.url.path)+"?error=1",status_code=303)
+ from fastapi.responses import JSONResponse
+ return JSONResponse({"detail":"Ungültige Anfrage"},status_code=422)
 
 @app.exception_handler(RuntimeError)
 async def privileged_operation_failed(request:Request,exc:RuntimeError):
