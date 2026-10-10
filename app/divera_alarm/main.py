@@ -29,6 +29,19 @@ def verify_os_password(username:str,password:str)->bool:
    return sock.recv(32)==b"OK\n"
  except (OSError,ValueError):
   return False
+def privileged_action(action:str,**kwargs):
+ """Use the root-owned control socket; the web process stays sandboxed."""
+ try:
+  with socket.socket(socket.AF_UNIX,socket.SOCK_STREAM) as sock:
+   sock.settimeout(85)
+   sock.connect("/run/divera-raspi-alarm/control.sock")
+   sock.sendall(json.dumps({"action":action,**kwargs}).encode("utf-8")+b"\n")
+   sock.shutdown(socket.SHUT_WR)
+   if sock.recv(32)!=b"OK\n":
+    raise RuntimeError("Privilegierte Aktion fehlgeschlagen")
+ except OSError as exc:
+  raise RuntimeError("Systemdienst für administrative Aktionen nicht erreichbar") from exc
+
 def auth(request:Request):
  token=request.cookies.get(SESSION_COOKIE,"")
  now=time.monotonic()
@@ -195,14 +208,14 @@ def div_page(_=Depends(auth)):
 def set_key(csrf_token:str=Form(alias="csrf"),key:str=Form(),_=Depends(auth)):
  csrf(csrf_token)
  if len(key.strip())<4:raise HTTPException(400,"Access-Key ist leer/zu kurz")
- subprocess.run(["sudo","/usr/local/sbin/divera-set-credential","divera_access_key"],input=key.strip()+"\n",text=True,check=True)
+ privileged_action("set_credential",name="divera_access_key",value=key.strip())
  return RedirectResponse("/divera",303)
 
 @app.post("/divera/system-key")
 def set_system_key(csrf_token:str=Form(alias="csrf"),key:str=Form(),_=Depends(auth)):
  csrf(csrf_token)
  if len(key.strip())<4:raise HTTPException(400,"Systemnutzer-Key ist leer/zu kurz")
- subprocess.run(["sudo","/usr/local/sbin/divera-set-credential","divera_system_key"],input=key.strip()+"\n",text=True,check=True)
+ privileged_action("set_credential",name="divera_system_key",value=key.strip())
  return RedirectResponse("/divera",303)
 
 @app.post("/divera/routing")
@@ -276,13 +289,13 @@ def password(csrf_token:str=Form(alias="csrf"),current:str=Form(),new:str=Form()
  csrf(csrf_token)
  if not verify_os_password(user,current):raise HTTPException(403,"Aktuelles Passwort ist falsch")
  if new!=confirm or len(new)<10:raise HTTPException(400,"Neue Passwörter stimmen nicht überein oder sind zu kurz")
- subprocess.run(["sudo","/usr/local/sbin/divera-change-admin-password",user],input=new+"\n",text=True,check=True)
+ privileged_action("change_password",username=user,password=new)
  return RedirectResponse("/system",303)
 
 @app.post("/system/recovery")
 def recovery(csrf_token:str=Form(alias="csrf"),enabled:str|None=Form(None),_=Depends(auth)):
  csrf(csrf_token);c=load_settings();c.monitoring.reboot_escalation_enabled=enabled is not None;save_settings(c)
- subprocess.run(["sudo","/usr/local/sbin/divera-apply-recovery-policy"],check=True)
+ privileged_action("recovery")
  return RedirectResponse("/system",303)
 
 @app.post("/system/update/check")
@@ -300,5 +313,5 @@ async def update_system(csrf_token:str=Form(alias="csrf"),_=Depends(auth)):
  if not info["newer"]:return RedirectResponse("/system",303)
  if not info["immutable"]:raise HTTPException(409,"Das neueste Release ist nicht unveränderlich und wird nicht installiert.")
  stage,digest=await download(info)
- subprocess.run(["sudo","/usr/local/sbin/divera-start-update",str(stage),info["version"],digest],check=True)
+ privileged_action("start_update",stage=str(stage),version=info["version"],digest=digest)
  return HTMLResponse(page("Update gestartet",f'<div class="card"><h3>Version {esc(info["version"])}</h3><p>Das Update läuft im Hintergrund. Die Administration wird während des Dienstneustarts kurz nicht erreichbar sein. Bei fehlgeschlagenem Healthcheck erfolgt automatisch ein Rollback.</p></div>'))
