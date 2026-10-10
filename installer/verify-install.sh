@@ -15,6 +15,12 @@ if systemctl is-active --quiet divera-auth.socket && \
 else
  bad "admin PAM socket"
 fi
+if systemctl is-active --quiet divera-control.socket && \
+   runuser -u divera-alarm -- /opt/divera-raspi-alarm/current/venv/bin/python -c 'import socket; s=socket.socket(socket.AF_UNIX); s.settimeout(5); s.connect("/run/divera-raspi-alarm/control.sock"); s.sendall(b"{}\\n"); s.shutdown(socket.SHUT_WR); assert s.recv(32)==b"DENIED\\n"' >/dev/null 2>&1; then
+ ok "privileged control socket"
+else
+ bad "privileged control socket"
+fi
 admin_ready=false
 for attempt in 1 2 3 4 5 6 7 8 9 10; do
  if systemctl is-active --quiet divera-admin && \
