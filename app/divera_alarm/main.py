@@ -120,6 +120,15 @@ def post_destination(path):
 def done(path,kind="saved"):
  return RedirectResponse(f"{path}?{kind}=1",status_code=303)
 
+@app.exception_handler(HTTPException)
+async def form_http_error(request:Request,exc:HTTPException):
+ if exc.status_code==303:
+  return RedirectResponse(exc.headers.get("Location","/login"),status_code=303)
+ if request.method=="POST":
+  return RedirectResponse(post_destination(request.url.path)+"?error=1",status_code=303)
+ from fastapi.responses import JSONResponse
+ return JSONResponse({"detail":exc.detail},status_code=exc.status_code,headers=exc.headers)
+
 @app.exception_handler(RuntimeError)
 async def privileged_operation_failed(request:Request,exc:RuntimeError):
  if request.method=="POST":
