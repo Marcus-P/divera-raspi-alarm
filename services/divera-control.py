@@ -63,6 +63,8 @@ def run(request):
     result = subprocess.run(command, input=payload, text=True,
                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                             timeout=75, check=False)
+    if result.returncode != 0:
+        print(f"Control action {action} failed (exit={result.returncode})", file=sys.stderr)
     return result.returncode == 0
 
 
