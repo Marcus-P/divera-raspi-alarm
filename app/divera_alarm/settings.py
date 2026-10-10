@@ -8,6 +8,7 @@ CREDENTIALS_DIRECTORY=Path(os.getenv("CREDENTIALS_DIRECTORY","/run/credentials")
 
 class Site(BaseModel): name:str="Feuerwehr"; timezone:str="Europe/Berlin"
 class Kiosk(BaseModel): divera_url:str=""; admin_url:str="http://127.0.0.1:8765/"; display_idle_minutes:int=Field(10,ge=1,le=240)
+class Administration(BaseModel): session_idle_minutes:int=Field(15,ge=1,le=240)
 class Routing(BaseModel):
  test_mode:bool=True
  test_recipient_ids:list[int]=Field(default_factory=list)
@@ -25,7 +26,7 @@ class Zigbee(BaseModel): permit_join_seconds:int=Field(180,ge=30,le=254)
 class Hardware(BaseModel): pir_bcm_gpio:int=23
 class Settings(BaseModel):
  site:Site=Site(); kiosk:Kiosk=Kiosk(); routing:Routing=Routing(); weekly_test:WeeklyTest=WeeklyTest()
- monitoring:Monitoring=Monitoring(); zigbee:Zigbee=Zigbee(); hardware:Hardware=Hardware()
+ monitoring:Monitoring=Monitoring(); zigbee:Zigbee=Zigbee(); hardware:Hardware=Hardware(); administration:Administration=Administration()
 
 def load_settings():
  if not CONFIG_PATH.exists():return Settings()
