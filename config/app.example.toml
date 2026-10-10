@@ -5,6 +5,8 @@ timezone="Europe/Berlin"
 divera_url=""
 admin_url="http://127.0.0.1:8765/"
 display_idle_minutes=10
+[administration]
+session_idle_minutes=15
 [routing]
 test_mode=true
 test_recipient_ids=[]
