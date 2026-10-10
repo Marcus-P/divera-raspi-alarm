@@ -65,10 +65,37 @@ async def api_users():
  try:return await users()
  except Exception as e:raise HTTPException(502,"DIVERA-Benutzer konnten nicht geladen werden") from e
 
+def observed_devices():
+ # This state is populated only after the alarm worker receives Zigbee MQTT
+ # messages. It is not a definitive list of paired Zigbee devices.
+ try:
+  devices=json.loads(Path("/var/lib/divera-raspi-alarm/detectors.json").read_text())
+  return devices if isinstance(devices,dict) else {}
+ except (OSError,ValueError):
+  return {}
+
 @app.get("/",response_class=HTMLResponse)
 def home(_=Depends(auth)):
  c=load_settings()
- return page("Übersicht",f'<div class="grid"><div class="card"><h3>Alarmweg</h3><span class="badge">Dienst aktiv</span><p class="muted">MQTT → Alarmdienst → DIVERA</p></div><div class="card"><h3>Zigbee</h3><p class="muted">Coordinator und Rauchmelder</p></div><div class="card"><h3>DIVERA</h3><b>{"Testmodus" if c.routing.test_mode else "Produktivmodus"}</b><p>Access-Key: {"vorhanden" if secret_present("DIVERA_ACCESS_KEY") else "noch nicht eingerichtet"}</p></div><div class="card"><h3>Anzeige</h3><b>PIR GPIO23</b></div></div>')
+ devices=observed_devices()
+ if devices:
+  device_rows="".join(
+   f'<li><b>{esc(name)}</b> · {("online" if data.get("online") is True else "offline" if data.get("online") is False else "Status unbekannt") if isinstance(data,dict) else "Status unbekannt"}</li>'
+   for name,data in sorted(devices.items())
+  )
+  zigbee_summary=f'<b>{len(devices)} Gerät(e) vom Alarmdienst erfasst</b><ul>{device_rows}</ul>'
+ else:
+  zigbee_summary='<p class="muted">Noch keine Geräte vom Alarmdienst erfasst.</p>'
+ display_summary=(f'<b>Bildschirmsteuerung per Bewegungssensor (PIR)</b>'
+                  f'<p>Bildschirm aus nach {c.kiosk.display_idle_minutes} Minuten ohne Bewegung.</p>'
+                  f'<p class="muted">Anschluss: GPIO {c.hardware.pir_bcm_gpio} (BCM). Funktion noch nicht geprüft.</p>')
+ body=(f'<div class="grid">'
+       f'<div class="card"><h3>Alarmweg</h3><span class="badge">Dienst aktiv</span><p class="muted">MQTT → Alarmdienst → DIVERA</p></div>'
+       f'<div class="card"><h3>Zigbee</h3>{zigbee_summary}<p><a href="/zigbee">Rauchmelder verwalten</a></p></div>'
+       f'<div class="card"><h3>DIVERA</h3><b>{"Testmodus" if c.routing.test_mode else "Produktivmodus"}</b><p>Access-Key: {"vorhanden" if secret_present("DIVERA_ACCESS_KEY") else "noch nicht eingerichtet"}</p></div>'
+       f'<div class="card"><h3>Anzeige</h3>{display_summary}<p><a href="/display">Anzeige konfigurieren</a></p></div>'
+       f'</div>')
+ return page("Übersicht",body)
 
 @app.get("/divera",response_class=HTMLResponse)
 def div_page(_=Depends(auth)):
