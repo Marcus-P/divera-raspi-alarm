@@ -8,6 +8,7 @@ command -v chromium >/dev/null && ok "Chromium" || bad "Chromium"
 command -v wlopm >/dev/null && ok "wlopm" || bad "wlopm"
 command -v systemd-creds >/dev/null && ok "encrypted credentials" || bad "systemd-creds"
 systemctl is-active --quiet mosquitto && ok "Mosquitto" || bad "Mosquitto"
+systemctl is-active --quiet divera-auth.socket && ok "admin PAM socket" || bad "admin PAM socket"
 admin_ready=false
 for attempt in 1 2 3 4 5 6 7 8 9 10; do
  if systemctl is-active --quiet divera-admin && \
