@@ -1,0 +1,19 @@
+[Unit]
+Description=DIVERA isolated privileged control request
+After=systemd-user-sessions.service
+
+[Service]
+Type=exec
+User=root
+Group=root
+ExecStart=/opt/divera-raspi-alarm/current/venv/bin/python /opt/divera-raspi-alarm/current/services/divera-control.py
+StandardInput=socket
+StandardOutput=inherit
+StandardError=journal
+PrivateTmp=true
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX
+TimeoutStartSec=90
