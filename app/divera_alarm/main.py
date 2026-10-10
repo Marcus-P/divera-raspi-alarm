@@ -296,7 +296,7 @@ def run_test(csrf_token:str=Form(alias="csrf"),_=Depends(auth)):
 async def save_tests(request:Request,csrf_token:str=Form(alias="csrf"),enabled:str|None=Form(None),time:str=Form(),recipient_ids:str=Form(""),_=Depends(auth)):
  csrf(csrf_token);fd=await request.form();c=load_settings()
  c.weekly_test.enabled=enabled is not None;c.weekly_test.weekdays=[x for x in fd.getlist("weekdays") if x in DAYS];c.weekly_test.time=time;c.weekly_test.recipient_ids=ids(recipient_ids);save_settings(c)
- return done("/tests","sent")
+ return done("/tests")
 
 @app.get("/display",response_class=HTMLResponse)
 def display(_=Depends(auth)):
@@ -334,6 +334,8 @@ def password(csrf_token:str=Form(alias="csrf"),current:str=Form(),new:str=Form()
 def recovery(csrf_token:str=Form(alias="csrf"),enabled:str|None=Form(None),_=Depends(auth)):
  csrf(csrf_token)
  c=load_settings()
+ if enabled is not None and not c.routing.production_commissioned:
+  raise RuntimeError("Watchdog erst nach Inbetriebnahme aktivierbar")
  previous=c.monitoring.reboot_escalation_enabled
  c.monitoring.reboot_escalation_enabled=enabled is not None
  save_settings(c)
