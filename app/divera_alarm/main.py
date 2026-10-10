@@ -109,6 +109,17 @@ async def security_headers(request:Request,call_next):
  response.headers["X-Frame-Options"]="DENY"
  response.headers["Referrer-Policy"]="no-referrer"
  return response
+def post_destination(path):
+ if path.startswith("/divera/"):return "/divera"
+ if path.startswith("/zigbee/"):return "/zigbee"
+ if path.startswith("/tests"):return "/tests"
+ if path.startswith("/display"):return "/display"
+ if path.startswith("/system"):return "/system"
+ return "/"
+
+def done(path,kind="saved"):
+ return RedirectResponse(f"{path}?{kind}=1",status_code=303)
+
 def csrf(v:str):
  if not secrets.compare_digest(v,CSRF): raise HTTPException(403,"Ungültige Formularanforderung")
 def esc(v):return html.escape(str(v),quote=True)
