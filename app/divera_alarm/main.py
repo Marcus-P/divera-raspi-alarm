@@ -107,7 +107,18 @@ def page(title,body):
          +';const csrf='+json.dumps(CSRF)
          +''';let idleTimer;
  function logOut(){fetch("/logout",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"csrf="+encodeURIComponent(csrf)}).finally(()=>location.replace("/login"));}
- function resetIdle(){clearTimeout(idleTimer);idleTimer=setTimeout(logOut,idleMs);}
+ let lastPing=0;
+ async function checkSession(){
+  try{
+   const response=await fetch("/api/session",{credentials:"same-origin",cache:"no-store"});
+   if(!response.ok)location.replace("/login");
+  }catch(error){location.replace("/login");}
+ }
+ function resetIdle(){
+  clearTimeout(idleTimer);idleTimer=setTimeout(logOut,idleMs);
+  const now=Date.now();
+  if(now-lastPing>30000){lastPing=now;void checkSession();}
+ }
  for(const eventName of ["pointermove","pointerdown","keydown","touchstart","scroll"])document.addEventListener(eventName,resetIdle,{passive:true});
  resetIdle();</script>''')
  return f'<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>{esc(title)}</title>{CSS}<body><div class="top"><b>DIVERA Raspberry Alarm</b> · {esc(c.site.name)}</div>{b}<main class="wrap">{NAV}<h1>{esc(title)}</h1>{body}</main>{script}</body></html>'
@@ -123,6 +134,9 @@ def display_config():
  return {"divera_url":c.kiosk.divera_url,"admin_url":c.kiosk.admin_url,
          "display_idle_minutes":c.kiosk.display_idle_minutes,
          "pir_bcm_gpio":c.hardware.pir_bcm_gpio}
+@app.get("/api/session",dependencies=[Depends(auth)])
+def session_status():return {"ok":True}
+
 @app.get("/api/status",dependencies=[Depends(auth)])
 def status():
  c=load_settings();return {"test_mode":c.routing.test_mode,"divera_key":secret_present("DIVERA_ACCESS_KEY"),"pir_gpio":23,"weekly_test":c.weekly_test.model_dump()}
